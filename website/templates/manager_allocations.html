@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Staff Allocations – {{ role }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/manager_allocations.css') }}">
+</head>
+
+
+
+<body>
+
+  <!-- Same navbar as admin timetable / manager dashboard -->
+  <nav class="navbar">
+    <div class="icon-container">
+      <img src="{{ url_for('static', filename='images/allocations.png') }}" alt="Allocations Icon" class="allocations">
+    </div>
+    <p class="DashboardTitle">Staff Workload Dashboard</p>
+    <p class="database">Database-Driven Team Management System</p>
+    </div>
+    </div>
+  </nav>
+
+  <!-- Same sidebar layout as manager dashboard -->
+  <nav class="sidebar">
+    <p class="sidebarname">{{ name }}</p>
+    <p class="administratorx">{{ role }}</p>
+    <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+    <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+
+    <!-- Dashboard → Notifications -->
+    <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+      <span>Dashboard</span>
+    </a>
+
+    <!-- Course Allocation → Manager Dashboard -->
+    <a href="{{ url_for('views.manager_dashboard') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/resources.png') }}" class="sidebar-icon">
+      <span>Staff <br> Allocation</span>
+    </a>
+
+    <!-- Staff Management → manager_staff_list -->
+    <a href="{{ url_for('views.manager_staff_list') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/staff-management.png') }}" class="sidebar-icon">
+      <span>Staff <br> Management</span>
+    </a>
+
+    <!-- MyTimetable → my_timetable -->
+    <a href="{{ url_for('views.my_timetable') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/my-timetable.png') }}" class="sidebar-icon">
+      <span>MyTimeTable</span>
+    </a>
+
+    <!-- Reporting System Static -->
+    <a href="{{ url_for('views.reports') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+      <span>Reporting System</span>
+    </a>
+
+    <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+      <span>FAQ</span>
+    </a>
+
+  </nav>
+
+
+  <!-- Main content wrapper: same as admin timetable page -->
+  <div class="course-table-wrapper2">
+
+
+    <div class="title-bar">
+      <div></div>
+      <h1 class="tt-title">Allocations for {{ course.CourseName }} ({{ course.CourseID }})</h1>
+      <div></div>
+    </div>
+
+
+
+    <div class="card">
+      <h3>Time slots for this course</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Time</th>
+            <th>Room</th>
+            <th>Assigned to</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if unassigned %}
+          {% for r in unassigned %}
+          <tr>
+            <td>{{ r.DayOfWeek }}</td>
+            <td>{{ r.TimeSlot }}</td>
+            <td>{{ r.RoomNumber }}</td>
+            <td>{{ r.AssignedStaff }}</td>
+          </tr>
+          {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="3" style="color:#6b7280;">No timetable slots defined for this course.</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+
+    </div>
+
+    <div class="card">
+      <!-- Simple assign-by-course form -->
+      <h3>Assign staff to this course</h3>
+      <form class="inline" method="post" action="{{ url_for('views.manager_allocations', course_id=course.CourseID) }}"
+        style="margin-bottom: 16px;">
+        <input class="input" name="staff_name" placeholder="Type staff name, e.g. Jane Doe" required>
+        <button class="btn primary" type="submit">Assign</button>
+      </form>
+
+      <h3 style="margin-top: 24px;">Staff currently allocated to this course</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:60%;">Staff member</th>
+            <th style="width:40%; text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in assigned %}
+          <tr>
+            <td>{{ a.StaffName }}</td>
+            <td>
+              <form method="post" action="{{ url_for('views.manager_delete_allocation',
+                               allocation_id=a.AnyAllocationID) }}">
+                <input type="hidden" name="course_id" value="{{ course.CourseID }}">
+                <input type="hidden" name="staff_id" value="{{ a.StaffID }}">
+                <button type="submit" class="btn primary">De-assign</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentPath = window.location.pathname;
+
+      document.querySelectorAll('.sidebar .sidebar-item[href]').forEach(link => {
+        try {
+          const linkPath = new URL(link.href).pathname;
+          if (linkPath === currentPath) {
+            link.classList.add('active');
+          }
+        } catch (e) {
+          // ignore bad hrefs like "#"
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>

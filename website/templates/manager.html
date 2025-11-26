@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ role }} Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/manager.css') }}">
+</head>
+
+
+<body>
+  <nav class="navbar">
+    <div class="icon-container">
+      <img src="{{ url_for('static', filename='images/allocations.png') }}" alt="Allocations Icon" class="allocations">
+    </div>
+    <p class="DashboardTitle">Staff Workload Dashboard</p>
+    <p class="database">Database-Driven Team Management System</p>
+    </div>
+    </div>
+  </nav>
+
+  <nav class="sidebar">
+    <p class="sidebarname">{{ name }}</p>
+    <p class="administratorx">{{ role }}</p>
+    <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+    <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+
+    <!-- Dashboard → Notifications -->
+    <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+      <span>Notifications</span>
+    </a>
+
+    <!-- Course Allocation → Manager Dashboard -->
+    <a href="{{ url_for('views.manager_dashboard') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/resources.png') }}" class="sidebar-icon">
+      <span>Staff <br> Allocation</span>
+    </a>
+
+    <!-- Staff Management → manager_staff_list -->
+    <a href="{{ url_for('views.manager_staff_list') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/staff-management.png') }}" class="sidebar-icon">
+      <span>Staff <br> Management</span>
+    </a>
+
+    <!-- MyTimetable → my_timetable -->
+    <a href="{{ url_for('views.my_timetable') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/my-timetable.png') }}" class="sidebar-icon">
+      <span>MyTimeTable</span>
+    </a>
+
+    <!-- FAQ Static -->
+    <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+      <span>FAQ</span>
+    </a>
+
+    <!-- Reporting System Static -->
+    <a href="{{ url_for('views.reports') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+      <span>Reporting System</span>
+    </a>
+
+  </nav>
+
+  <div class="course-table-wrapper">
+
+    <section id="courses" class="panel">
+
+      <div class="manager-search-wrapper">
+        <form action="{{ url_for('views.manager_dashboard') }}" method="GET" class="search-form">
+          <div class="search-table-container">
+            <input name="search" type="text" placeholder="Search by course name"
+              value="{{ request.args.get('search', '') }}">
+
+            <select name="sort">
+              <option value="">Sort</option>
+              <option value="CourseName" {{ 'selected' if request.args.get('sort')=='CourseName' else '' }}>Course Name
+              </option>
+              <option value="ClassSize" {{ 'selected' if request.args.get('sort')=='ClassSize' else '' }}>Class Size
+              </option>
+              <option value="AllocatedStaff" {{ 'selected' if request.args.get('sort')=='AllocatedStaff' else '' }}>
+                Allocated Staff</option>
+            </select>
+
+            <button type="submit">Search</button>
+          </div>
+        </form>
+      </div>
+
+      <table class="courses-table">
+        <thead>
+          <tr>
+            <th>Course Name</th>
+            <th>Course Info</th>
+            <th>Class Size</th>
+            <th>Allocated Staff</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for course in courses %}
+          <tr>
+            <td>{{ course.CourseName }}</td>
+            <td>{{ course.CourseInfo }}</td>
+            <td>{{ course.ClassSize }}</td>
+            <td>{{ course.AllocatedStaff }}</td>
+            <td>
+              <a class="manage-btn" href="{{ url_for('views.manager_allocations', course_id=course.CourseID) }}">
+                Assign
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+    </section>
+  </div>
+
+  <h2>Allocations</h2>
+  {% if allocations and allocations|length %}
+  <table class="allocations-table">
+    <thead>
+      <tr>
+        <th>AllocationID</th>
+        <th>StaffID</th>
+        <th>CourseID</th>
+        <th>AllocationDate</th>
+        <th>AssignedHour</th>
+        <th>TotalHours</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in allocations %}
+      <tr>
+        <td>{{ a.AllocationID }}</td>
+        <td>{{ a.StaffID }}</td>
+        <td>{{ a.CourseID }}</td>
+        <td>{{ a.AllocationDate }}</td>
+        <td>{{ a.AssignedHour }}</td>
+        <td>{{ a.TotalHours }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:gray">No allocations found.</p>
+  {% endif %}
+  </section>
+
+  <script>
+    function showPanelFromHash() {
+      const panels = Array.from(document.querySelectorAll('.panel'));
+      const ids = panels.map(p => '#' + p.id);
+
+      let hash = location.hash || '#courses';
+      if (!ids.includes(hash)) hash = '#courses';
+
+      panels.forEach(p => p.classList.toggle('active', '#' + p.id === hash));
+    }
+
+    // Intercept sidebar clicks only for in-page hash links
+    document.querySelectorAll('.sidebar .sidebar-item').forEach(a => {
+      a.addEventListener('click', e => {
+        const href = a.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          e.preventDefault();
+          history.pushState(null, '', href);
+          showPanelFromHash();
+        }
+        // else: it's a real URL (/manager/allocations etc.) — let the browser navigate normally
+      });
+    });
+
+    window.addEventListener('popstate', showPanelFromHash);
+
+    // Initial render (no URL rewrite)
+    showPanelFromHash();
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentPath = window.location.pathname;
+
+      document.querySelectorAll('.sidebar .sidebar-item[href]').forEach(link => {
+        try {
+          const linkPath = new URL(link.href).pathname;
+          if (linkPath === currentPath) {
+            link.classList.add('active');
+          }
+        } catch { }
+      });
+    });
+  </script>
+
+
+</body>
+
+</html>

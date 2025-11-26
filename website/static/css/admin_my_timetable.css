@@ -1,0 +1,77 @@
+ .timetable-container {
+   margin-left: 210px;
+   margin-top: 78px;
+   padding: 28px 32px;
+   background: var(--pageBg);
+   min-height: 100vh;
+ }
+
+ /* Timetable Table */
+ table.timetable {
+   width: 100%;
+   border-collapse: separate;
+   border-spacing: 0;
+   background: var(--card);
+   border: 1px solid var(--stroke);
+   border-radius: 12px;
+   overflow: hidden;
+   box-shadow: 0 2px 12px rgba(90, 110, 130, 0.08);
+ }
+
+ .timetable th,
+ .timetable td {
+   border: 1px solid var(--stroke);
+   padding: 14px;
+   text-align: center;
+   vertical-align: top;
+   min-height: 70px;
+   font-size: 14px;
+ }
+
+ /* Header Styling */
+ .timetable th {
+   background: var(--headerBg);
+   color: var(--title);
+   font-weight: 700;
+ }
+
+ /* Slot Box Styling */
+ .slot {
+   background: var(--chip);
+   color: var(--chipText);
+   padding: 8px;
+   border-radius: 8px;
+   margin-bottom: 6px;
+   font-size: 13px;
+   line-height: 1.4;
+   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+ }
+
+ .title-bar {
+   display: grid;
+   grid-template-columns: auto 1fr auto;
+   align-items: center;
+   margin-bottom: 20px;
+ }
+
+ .back-icon-btn {
+   width: 32px;
+   height: 32px;
+   padding: 0;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 18px;
+ }
+
+ .tt-title {
+   text-align: center;
+   margin: 0;
+   font-size: 28px;
+   font-weight: 700;
+ }
+
+ .title-spacer {
+   width: 32px;
+   /* matches button width to keep grid symmetric */
+ }

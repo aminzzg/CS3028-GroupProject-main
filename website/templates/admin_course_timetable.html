@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Timetable for {{ course.CourseName }} ({{ course.CourseID }})</title>
+
+  <!-- Inter font (same as your CSS) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Your main stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+
+  <!-- Page-specific helpers (lightweight + matches your palette) -->
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <div class="icon-container">
+      <img src="{{ url_for('static', filename='images/allocations.png') }}" alt="Allocations Icon" class="allocations">
+    </div>
+    <p class="DashboardTitle">Staff Workload Dashboard</p>
+    <p class="database">Database-Driven Team Management System</p>
+
+  </nav>
+
+  <nav class="sidebar">
+    <p class="sidebarname">{{ name }}</p>
+    <p class="administratorx">{{ role }}</p>
+    <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+    <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+
+    <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+      <span>Notifications</span>
+    </a>
+
+    <a href="{{ url_for('views.admin_courses') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/resources.png') }}" class="sidebar-icon">
+      <span>Course <br> Allocation</span>
+    </a>
+
+    <a href="{{ url_for('views.admin_hours') }}"
+      class="sidebar-item {% if active_page == 'admin_staff' %}active{% endif %}">
+      <img src="{{ url_for('static', filename='images/staff-management.png') }}" class="sidebar-icon">
+      <span>Staff <br> Management</span>
+    </a>
+
+    <!-- MyTimetable (works for Admin) -->
+    <a href="{{ url_for('views.my_timetable') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/my-timetable.png') }}" class="sidebar-icon">
+      <span>MyTimetable</span>
+    </a>
+
+    <a href="{{ url_for('views.reports') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+      <span>Reporting System</span>
+    </a>
+
+    <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+      <span>FAQ</span>
+    </a>
+
+  </nav>
+
+
+  <!-- your navbar + sidebar are already present sitewide via base layout -->
+  <!-- This page only renders the main content area -->
+  <div class="course-table-wrapper2">
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+    <div class="flashes">
+      {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Page title -->
+    <h1 class="tt-title">Timetable for {{ course.CourseName }} ({{ course.CourseID }})</h1>
+
+    <!-- ADD SLOT CARD -->
+    <div class="tt-card">
+      <div class="tt-card-header">
+        <div class="tt-card-title"> </div>
+        <form method="POST" class="tt-grid" style="margin:0; width:100%;">
+          <!-- Day -->
+          <div>
+            <label class="tt-label">Day:</label>
+            <select name="day" class="pill-select" required>
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+            </select>
+          </div>
+
+          <!-- Time Slot -->
+          <div>
+            <label class="tt-label">Time Slot:</label>
+            <input type="text" name="timeslot" class="pill-input" placeholder="09:00 - 10:00" required>
+          </div>
+
+          <!-- Room -->
+          <div>
+            <label class="tt-label">Room:</label>
+            <input type="text" name="room" class="pill-input" placeholder="Room Number">
+          </div>
+
+          <!-- spacer keeps alignment like screenshot -->
+          <div style="justify-self:end; grid-column: 4 / 5;">
+            <button type="submit" class="tt-add">Add Slot</button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- EXISTING TIMETABLE -->
+    <div class="tt-card">
+      <div class="tt-card-header">
+        <div class="tt-card-title">Existing Timetable</div>
+      </div>
+
+      <!-- subtle meta labels row (like your screenshot small labels) -->
+      <!-- subtle meta labels row (like your screenshot small labels) -->
+
+
+      <table class="tt-table">
+        <thead>
+          <tr>
+            <th style="width:22%;">Day</th>
+            <th style="width:30%;">Time</th>
+            <th style="width:26%;">Room</th>
+            <th style="width:12%;"></th>
+            <th style="width:10%; text-align:right;">&nbsp;</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>{{ r.DayOfWeek }}</td>
+            <td>{{ r.TimeSlot }}</td>
+            <td>{{ r.RoomNumber }}</td>
+            <td></td>
+            <td style="text-align:right;">
+              <form method="POST" action="{{ url_for('views.admin_delete_timetable_row', timetable_id=r.TimetableID) }}"
+                style="margin:0;">
+                <input type="hidden" name="course_id" value="{{ course.CourseID }}">
+                <button type="submit" class="tt-action-del"
+                  onclick="return confirm('Delete this time slot?')">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" style="color:#7A8AA0;">No time slots yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <a href="{{ url_for('views.admin_courses') }}" class="back-link">← Back to Courses</a>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentPath = window.location.pathname;
+
+      document.querySelectorAll('.sidebar .sidebar-item[href]').forEach(link => {
+        try {
+          const linkPath = new URL(link.href).pathname;
+          if (linkPath === currentPath) {
+            link.classList.add('active');
+          }
+        } catch (e) {
+          // ignore bad hrefs like "#"
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>

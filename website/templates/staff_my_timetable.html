@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>My Timetable – {{ staff.Name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/staff_my_timetable.css') }}">
+</head>
+
+
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="icon-container">
+      <img src="{{ url_for('static', filename='images/allocations.png') }}" alt="Allocations Icon" class="allocations">
+    </div>
+    <p class="DashboardTitle">Staff Workload Dashboard</p>
+    <p class="database">Database-Driven Team Management System</p>
+
+  </nav>
+
+  <!-- <p class="WorkloadSpreadsheet">Staff Workload Spreadsheet</p>
+  <p class="StaffWorkload">
+    Staff <br> Member
+    Role
+    Current Tasks
+    Hours This Week
+    Capacity
+    Workload%
+    Status
+    Next Available
+    Actions
+  </p>
+
+  <p class="SmallLabels-2">Generate Report</p>
+  <p class="SmallLabels-3">Export CSV</p>
+  </p> -->
+  <nav class="sidebar">
+    <p class="sidebarname">{{ name }}</p>
+    <p class="administratorx">{{ role }}</p>
+    <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+    <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+
+    <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+      <span>Notifications</span>
+    </a>
+
+
+
+    <!-- MyTimetable (works for Admin) -->
+    <a href="{{ url_for('views.my_timetable') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/my-timetable.png') }}" class="sidebar-icon">
+      <span>MyTimetable</span>
+    </a>
+
+    <a href="{{ url_for('views.reports') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+      <span>Reporting System</span>
+    </a>
+
+    <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+      <span>FAQ</span>
+    </a>
+
+  </nav>
+
+
+
+  <div class="timetable-container">
+    <div class="title-bar">
+      <a href="{{ url_for('views.notifications', staff_id=staff.StaffID) }}" class="manage-btn back-icon-btn"
+        aria-label="Back to allocations">
+        ←
+      </a>
+
+      <h1 class="tt-title">My Timetable</h1>
+
+      <div class="title-spacer"></div>
+    </div>
+
+    <table class="timetable">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Monday</th>
+          <th>Tuesday</th>
+          <th>Wednesday</th>
+          <th>Thursday</th>
+          <th>Friday</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set days = ['Monday','Tuesday','Wednesday','Thursday','Friday'] %}
+
+        {% for hour in range(7, 21) %}
+        <tr>
+          <td>{{ "%02d:00" % hour }} - {{ "%02d:00" % (hour+1) }}</td>
+
+          {% for day in days %}
+          <td>
+            {% for a in allocations %}
+            {% if a.DayOfWeek == day
+            and a.StartHour is not none
+            and hour >= a.StartHour
+            and hour < a.EndHour %} <div class="slot">
+              {{ a.CourseName }}<br>
+              Room {{ a.RoomNumber }}<br>
+              {{ a.TimeSlot }}
+  </div>
+  {% endif %}
+  {% endfor %}
+  </td>
+  {% endfor %}
+  </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+
+  <!-- ========================================= -->
+  <!--  Pending courses: let staff choose a slot -->
+  <!-- ========================================= -->
+
+  <div style="margin-top: 32px;">
+    <h2 class="section-title">Choose Your Time Slots</h2>
+
+    {% if pending_courses %}
+    {% for course in pending_courses %}
+    <div class="card" style="margin-top: 16px; padding: 16px 20px;">
+      <div class="card-header"
+        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div>
+          <h3 style="margin:0; font-size:18px; font-weight:600;">
+            {{ course.CourseName }} ({{ course.CourseID }})
+          </h3>
+          <p style="margin:4px 0 0; font-size:13px; color:#6b7280;">
+            You are assigned to this course. Please choose one of the available time slots below.
+          </p>
+        </div>
+        <span class="badge">Waiting for selection</span>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:15%;">Day</th>
+            <th style="width:25%;">Time</th>
+            <th style="width:15%;">Room</th>
+            <th style="width:25%;">Allocated To</th>
+            <th style="width:20%;">Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% set slots = course_slots[course.CourseID] %}
+          {% if slots %}
+          {% for slot in slots %}
+          <tr>
+            <td>{{ slot.DayOfWeek }}</td>
+            <td>{{ slot.TimeSlot }}</td>
+            <td>{{ slot.RoomNumber }}</td>
+
+            <!-- NEW: who is currently allocated to this slot -->
+            <td>
+              {% if slot.AllocatedStaff %}
+              {{ slot.AllocatedStaff }}
+              {% else %}
+              <span style="color:#6b7280;">No one yet</span>
+              {% endif %}
+            </td>
+
+            <!-- Action: assign or de-assign for THIS logged-in staff -->
+            <td>
+              {% if slot.IsChosen %}
+              <span style="margin-right:8px; color:#16a34a; font-weight:600;">
+                Slot chosen
+              </span>
+              <form method="post" action="{{ url_for('views.my_timetable') }}" style="display:inline;">
+                <input type="hidden" name="course_id" value="{{ course.CourseID }}">
+                <input type="hidden" name="timetable_id" value="{{ slot.TimeTableID }}">
+                <input type="hidden" name="mode" value="unassign">
+                <button type="submit" style="
+                border-radius:8px;
+                border:1px solid #e11d48;
+                background:#ffffff;
+                color:#e11d48;
+                padding:6px 12px;
+                font-size:13px;
+                cursor:pointer;">
+                  De-assign
+                </button>
+              </form>
+              {% else %}
+              <form method="post" action="{{ url_for('views.my_timetable') }}" style="display:inline;">
+                <input type="hidden" name="course_id" value="{{ course.CourseID }}">
+                <input type="hidden" name="timetable_id" value="{{ slot.TimeTableID }}">
+                <input type="hidden" name="mode" value="assign">
+                <button type="submit" style="
+                border-radius:8px;
+                border:none;
+                background:#155BCB;
+                color:#ffffff;
+                padding:6px 12px;
+                font-size:13px;
+                font-weight:600;
+                cursor:pointer;">
+                  Choose this slot
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="5" style="color:#6b7280; text-align:center;">
+              No time slots have been defined for this course yet.
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+
+      </table>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="margin-top:12px; color:#6b7280;">
+      You currently have no courses waiting for a time-slot choice.
+    </p>
+    {% endif %}
+  </div>
+
+
+
+  </div>
+
+</body>
+
+</html>

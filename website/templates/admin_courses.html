@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ role }} Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="icon-container">
+            <img src="{{ url_for('static', filename='images/allocations.png') }}" alt="Allocations Icon"
+                class="allocations">
+        </div>
+        <p class="DashboardTitle">Staff Workload Dashboard</p>
+        <p class="database">Database-Driven Team Management System</p>
+
+    </nav>
+
+    <nav class="sidebar">
+        <p class="sidebarname">{{ name }}</p>
+        <p class="administratorx">{{ role }}</p>
+        <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+        <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+
+        <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+            <span>Notifications</span>
+        </a>
+
+        <a href="{{ url_for('views.admin_courses') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/resources.png') }}" class="sidebar-icon">
+            <span>Course <br> Allocation</span>
+        </a>
+
+        <a href="{{ url_for('views.admin_hours') }}"
+            class="sidebar-item {% if active_page == 'admin_staff' %}active{% endif %}">
+            <img src="{{ url_for('static', filename='images/staff-management.png') }}" class="sidebar-icon">
+            <span>Staff <br> Management</span>
+        </a>
+
+        <!-- MyTimetable (works for Admin) -->
+        <a href="{{ url_for('views.my_timetable') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/my-timetable.png') }}" class="sidebar-icon">
+            <span>MyTimetable</span>
+        </a>
+
+        <a href="{{ url_for('views.reports') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+            <span>Reporting System</span>
+        </a>
+
+        <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+            <span>FAQ</span>
+        </a>
+
+    </nav>
+
+
+    <div class="course-table-wrapper">
+        <div class="search-table-container">
+            <form action="{{ url_for('views.manager_dashboard') }}" method="GET" class="search-form">
+                <input name="search" type="text" placeholder=" Search by course name "
+                    value="{{ request.args.get('search', '') }}">
+
+                <select name="sort">
+                    <option value="">Sort</option>
+                    <option value="CourseName" {{ 'selected' if request.args.get('sort')=='CourseName' else '' }}>
+                        Course Name</option>
+                    <option value="ClassSize" {{ 'selected' if request.args.get('sort')=='ClassSize' else '' }}>
+                        Class Size</option>
+                </select>
+
+                <button type="submit">Search</button>
+            </form>
+
+            <table class="courses-table">
+                <thead>
+                    <tr>
+                        <th>Course ID</th>
+                        <th>Course Name</th>
+                        <th>Manage Timetable</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for course in courses %}
+                    <tr>
+                        <td>{{ course.CourseID }}</td>
+                        <td>{{ course.CourseName }}</td>
+                        <td>
+                            <a href="{{ url_for('views.admin_course_timetable', course_id=course.CourseID) }}"
+                                class="manage-btn">
+                                Manage
+                            </a>
+                        </td>
+
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3">No courses found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+
+            document.querySelectorAll('.sidebar .sidebar-item[href]').forEach(link => {
+                try {
+                    const linkPath = new URL(link.href).pathname;
+                    if (linkPath === currentPath) {
+                        link.classList.add('active');
+                    }
+                } catch (e) {
+                    // ignore bad hrefs like "#"
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

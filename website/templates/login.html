@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="login-container">
+        <img src="{{ url_for('static', filename='images/logo2.png') }}" alt="Logo">
+        <h1 class="title-h1">MyManagement</h1>
+
+        <!-- ✅ Wrap your existing boxes in a Flask form -->
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="rectangle1">
+                <input name="username" id="emailInput" type="text" placeholder="Email" class="textbox" required>
+            </div>
+
+            <div class="rectangle2">
+                <input name="password" id="passwordInput" type="password" placeholder="Password" class="textbox"
+                    required>
+            </div>
+
+            <button type="submit" class="rectangle3">Log In</button>
+        </form>
+
+        <p class="forgotpass">Forgot Password?</p>
+
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul style="color:red; list-style:none; padding:0; margin-top:10px;">
+            {% for msg in messages %}
+            <li>{{ msg }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+    </div>

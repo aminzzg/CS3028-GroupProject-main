@@ -1,0 +1,137 @@
+.title-h1 {
+    font-size: 64px;
+    font-family: Inter;
+    color: black;
+    font-weight: 400;
+    text-align: center;
+    margin-top: 200px;
+
+}
+
+.login-p {
+    font-size: 28px;
+    font-weight: 400;
+    font-family: Inter;
+
+}
+
+.rectangle1 {
+    width: 501px;
+    height: 74px;
+    border: 1px solid #155BCB;
+    border-radius: 8px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
+    font-size: 20px;
+    font-weight: 400px;
+    font-family: "Inter";
+    color: #76787BA6;
+    padding-left: 20px;
+    background-color: white;
+    cursor: text;
+}
+
+.rectangle2 {
+    width: 501px;
+    height: 74px;
+    border: 1px solid #155BCB;
+    border-radius: 8px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
+    font-size: 20px;
+    font-weight: 400;
+    font-style: normal;
+    font-family: "Inter";
+    color: #76787BA6;
+    padding-left: 20px;
+    background-color: white;
+    cursor: text;
+
+}
+
+.rectangle3 {
+    all: unset;
+    width: 501px;
+    height: 74px;
+    background-color: #6098F3;
+    border-radius: 8px;
+    font-size: 30px;
+    font-weight: 50;
+    font-style: normal;
+    font-family: "Inter";
+    color: #FFFFFF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 500;
+    padding-left: 20px;
+    margin-top: 30px;
+    cursor: pointer;
+}
+
+body {
+    background-color: #D7E5F4;
+}
+
+img {
+    position: absolute;
+    top: 50px;
+    left: 30px;
+}
+
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+}
+
+.rectangle1,
+.rectangle2,
+.rectangle3 {
+    width: 90%;
+    max-width: 500px;
+}
+
+@media (max-width: 768px) {}
+
+.forgotpass {
+    font-size: 20px;
+    font-weight: 300;
+    font-family: "Inter";
+    text-align: left;
+    margin-top: -10px;
+    width: 100%;
+    max-width: 500px;
+    font-size: 16px;
+    color: #003C8EA6;
+    cursor: pointer;
+}
+
+.rectangle1,
+.rectangle2 {
+    font-weight: 300;
+}
+
+.textbox {
+    width: 100%;
+    height: 100%;
+    border: none;
+    font-size: 20px;
+    padding: 0 10px;
+    outline: none;
+    background: transparent;
+}
+
+form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}

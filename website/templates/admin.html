@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ role }} Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="icon-container">
+      <img src="{{ url_for('static', filename='images/allocations.png') }}" alt="Allocations Icon" class="allocations">
+    </div>
+    <p class="DashboardTitle">Staff Workload Dashboard</p>
+    <p class="database">Database-Driven Team Management System</p>
+
+  </nav>
+
+  <!-- <p class="WorkloadSpreadsheet">Staff Workload Spreadsheet</p>
+  <p class="StaffWorkload">
+    Staff <br> Member
+    Role
+    Current Tasks
+    Hours This Week
+    Capacity
+    Workload%
+    Status
+    Next Available
+    Actions
+  </p>
+
+  <p class="SmallLabels-2">Generate Report</p>
+  <p class="SmallLabels-3">Export CSV</p>
+  </p> -->
+
+  <nav class="sidebar">
+    <p class="sidebarname">{{ name }}</p>
+    <p class="administratorx">{{ role }}</p>
+
+    <!-- LOGOUT -->
+    <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+    <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+
+    <!-- Notifications -->
+    <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+      <span>Notifications</span>
+    </a>
+
+    <!-- Course Allocation -->
+    <a href="{{ url_for('views.admin_staff_list') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/resources.png') }}" class="sidebar-icon">
+      <span>Course <br> Allocation</span>
+    </a>
+
+    <!-- Staff Management -->
+    <a href="{{ url_for('views.admin_hours') }}"
+      class="sidebar-item {% if active_page == 'admin_staff' %}active{% endif %}">
+      <img src="{{ url_for('static', filename='images/staff-management.png') }}" class="sidebar-icon">
+      <span>Staff <br> Management</span>
+    </a>
+
+    <!-- MyTimetable -->
+    <a href="{{ url_for('views.my_timetable') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/my-timetable.png') }}" class="sidebar-icon">
+      <span>MyTimetable</span>
+    </a>
+
+    <!-- Reporting System -->
+    <a href="" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/analytics.png') }}" alt="Analytics Icon" class="sidebar-icon">
+      <span>Reporting System</span>
+    </a>
+
+    <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+      <span>FAQ</span>
+    </a>
+
+  </nav>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentPath = window.location.pathname.replace(/\/$/, '');
+
+      document
+        .querySelectorAll('.sidebar .sidebar-item[href]:not(.disabled)')
+        .forEach(link => {
+          try {
+            const linkPath = new URL(link.href).pathname.replace(/\/$/, '');
+
+            if (currentPath === linkPath || currentPath.startsWith(linkPath + '/')) {
+              link.classList.add('active');
+            }
+          } catch (e) { }
+        });
+    });
+  </script>
+
+</body>
+
+</html>

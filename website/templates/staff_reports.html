@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ role }} – Reports</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/staff_reports.css') }}">
+</head>
+
+
+<body>
+
+  <!-- Navbar -->
+  <!DOCTYPE html>
+  <html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ role }} Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  </head>
+
+  <body>
+    <nav class="navbar">
+      <div class="icon-container">
+        <img src="{{ url_for('static', filename='images/allocations.png') }}" alt="Allocations Icon"
+          class="allocations">
+      </div>
+      <p class="DashboardTitle">Staff Workload Dashboard</p>
+      <p class="database">Database-Driven Team Management System</p>
+
+    </nav>
+
+    <!-- <p class="WorkloadSpreadsheet">Staff Workload Spreadsheet</p>
+  <p class="StaffWorkload">
+    Staff <br> Member
+    Role
+    Current Tasks
+    Hours This Week
+    Capacity
+    Workload%
+    Status
+    Next Available
+    Actions
+  </p>
+
+  <p class="SmallLabels-2">Generate Report</p>
+  <p class="SmallLabels-3">Export CSV</p>
+  </p> -->
+    <nav class="sidebar">
+      <p class="sidebarname">{{ name }}</p>
+      <p class="administratorx">{{ role }}</p>
+      <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+      <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+
+      <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+        <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+        <span>Notifications</span>
+      </a>
+
+
+
+      <!-- MyTimetable (works for Admin) -->
+      <a href="{{ url_for('views.my_timetable') }}" class="sidebar-item">
+        <img src="{{ url_for('static', filename='images/my-timetable.png') }}" class="sidebar-icon">
+        <span>MyTimetable</span>
+      </a>
+
+      <a href="{{ url_for('views.reports') }}" class="sidebar-item">
+        <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+        <span>Reporting System</span>
+      </a>
+
+      <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+        <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+        <span>FAQ</span>
+      </a>
+
+    </nav>
+
+  </body>
+
+  </html>
+
+
+  <!-- Page content -->
+  <div class="report-wrapper">
+
+    <h1 class="tt-title">Submit a Report / Request</h1>
+    <p style="color:#555; margin-top:-4px;">Hi {{ name }}, use this form to contact management or other staff.</p>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+    <div class="flashes">
+      {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="report-card">
+      <h2>New Request</h2>
+
+      <form method="POST">
+        <!-- Request type -->
+        <label><strong>Request Type</strong></label>
+        <select name="report_type" id="report_type" onchange="updateRecipientSelect()" required>
+          <option value="">-- Select type --</option>
+          <option value="Course Change Request">Course Change Request</option>
+          <option value="Hours Change Request">Hours Change Request</option>
+          <option value="Message Staff">Message Staff</option>
+        </select>
+
+        <!-- Course Change: Admin + Manager -->
+        <div id="recipient_course" class="recipient-block">
+          <label><strong>Send To (Admin or Manager)</strong></label>
+          <select name="receiver_id">
+            <option value="">-- Select Admin / Manager --</option>
+            {% for u in admin_managers %}
+            <option value="{{ u.StaffID }}">{{ u.Name }} ({{ u.Position }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Hours Change: Admin only -->
+        <div id="recipient_hours" class="recipient-block">
+          <label><strong>Send To (Admin only)</strong></label>
+          <select name="receiver_id" disabled>
+            <option value="">-- Select Admin --</option>
+            {% for u in admins %}
+            <option value="{{ u.StaffID }}">{{ u.Name }} ({{ u.Position }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Message Staff: all staff -->
+        <div id="recipient_message" class="recipient-block">
+          <label><strong>Send To (Any Staff)</strong></label>
+          <select name="receiver_id" disabled>
+            <option value="">-- Select Staff --</option>
+            {% for u in all_staff %}
+            <option value="{{ u.StaffID }}">{{ u.Name }} ({{ u.Position }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <label><strong>Message</strong></label>
+        <textarea name="message" rows="4" placeholder="Describe your request..." required></textarea>
+
+        <button type="submit">Send Request</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function updateRecipientSelect() {
+      const type = document.getElementById('report_type').value;
+
+      const blocks = {
+        "Course Change Request": document.getElementById('recipient_course'),
+        "Hours Change Request": document.getElementById('recipient_hours'),
+        "Message Staff": document.getElementById('recipient_message')
+      };
+
+      // Hide all blocks & disable selects
+      Object.values(blocks).forEach(block => {
+        if (!block) return;
+        block.style.display = 'none';
+        const sel = block.querySelector('select');
+        if (sel) sel.disabled = true;
+      });
+
+      // Show proper block & enable its select
+      if (blocks[type]) {
+        blocks[type].style.display = 'block';
+        const sel = blocks[type].querySelector('select');
+        if (sel) sel.disabled = false;
+      }
+    }
+  </script>
+
+</body>
+
+</html>

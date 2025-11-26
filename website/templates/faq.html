@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ role }} – FAQ</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+
+<body>
+
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <p class="sidebarname">{{ name }}</p>
+    <p class="administratorx">{{ role }}</p>
+
+    <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+      <span>Notifications</span>
+    </a>
+
+    {% if role == 'Admin' %}
+    <a href="{{ url_for('views.admin_courses') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/resources.png') }}" class="sidebar-icon">
+      <span>Course <br> Allocation</span>
+    </a>
+
+    <a href="{{ url_for('views.admin_staff_list') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/staff-management.png') }}" class="sidebar-icon">
+      <span>Staff <br> Management</span>
+    </a>
+    {% endif %}
+
+    {% if role == 'Manager' %}
+    <a href="{{ url_for('views.manager_dashboard') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/resources.png') }}" class="sidebar-icon">
+      <span>Staff <br> Allocation</span>
+    </a>
+
+    <a href="{{ url_for('views.manager_staff_list') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/staff-management.png') }}" class="sidebar-icon">
+      <span>Staff <br> Management</span>
+    </a>
+    {% endif %}
+
+    <a href="{{ url_for('views.my_timetable') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/my-timetable.png') }}" class="sidebar-icon">
+      <span>MyTimetable</span>
+    </a>
+
+    <a href="{{ url_for('views.reports') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+      <span>Reporting System</span>
+    </a>
+
+    <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+      <span>FAQ</span>
+    </a>
+
+    <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+    <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+  </nav>
+
+  <!-- FAQ CONTENT -->
+  <div class="faq-container">
+    <div class="faq-header">
+      <h1>Frequently Asked Questions</h1>
+      <p>Find answers to common questions about using the Staff Workload Management System.</p>
+    </div>
+
+    <!-- 1 -->
+    <div class="faq-section">
+      <h2>Getting Started</h2>
+
+      <details>
+        <summary>How do I log in?</summary>
+        <p>Use your university-provided login details. If login fails, contact your system administrator.</p>
+      </details>
+
+      <details>
+        <summary>Who can use this system?</summary>
+        <p>Admins, Managers, and Staff members all have access with different permissions.</p>
+      </details>
+    </div>
+
+    <!-- 2 -->
+    <div class="faq-section">
+      <h2>Timetables & Hours</h2>
+
+      <details>
+        <summary>How do I view my timetable?</summary>
+        <p>Click “MyTimetable” on the left sidebar. Admins/Managers can also view staff timetables.</p>
+      </details>
+
+      <details>
+        <summary>What does "Target Hours" mean?</summary>
+        <p>Target hours represent how many hours a staff member is expected to work per week.</p>
+      </details>
+    </div>
+
+    <!-- 3 -->
+    <div class="faq-section">
+      <h2>Course & Staff Allocation</h2>
+
+      <details>
+        <summary>How do I assign a staff member to a course?</summary>
+        <p>Admins and Managers can assign staff through the Course Allocation page.</p>
+      </details>
+    </div>
+
+    <!-- 4 -->
+    <div class="faq-section">
+      <h2>Notifications & Messages</h2>
+
+      <details>
+        <summary>Who can send messages?</summary>
+        <p>Staff and Managers can send messages to one another. Admins do not use the messaging system.</p>
+      </details>
+
+      <details>
+        <summary>How do I mark a message as read?</summary>
+        <p>Open a message and click “Mark as Read”.</p>
+      </details>
+    </div>
+
+    <!-- 5 -->
+    <div class="faq-section">
+      <h2>Technical</h2>
+
+      <details>
+        <summary>I forgot my password.</summary>
+        <p>Contact your system administrator to reset your credentials.</p>
+      </details>
+
+      <details>
+        <summary>Which browser should I use?</summary>
+        <p>Google Chrome is recommended.</p>
+      </details>
+    </div>
+
+  </div>
+
+</body>
+
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>{{ role }} – Staff Hours</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+
+<body>
+  <!-- Reuse your navbar -->
+  <nav class="navbar">
+    <div class="icon-container">
+      <img src="{{ url_for('static', filename='images/allocations.png') }}" alt="Allocations Icon" class="allocations">
+    </div>
+    <p class="DashboardTitle">Staff Workload Dashboard</p>
+    <p class="database">Database-Driven Team Management System</p>
+  </nav>
+
+  <!-- Sidebar (same style as other admin pages) -->
+  <nav class="sidebar">
+    <p class="sidebarname">{{ name }}</p>
+    <p class="administratorx">{{ role }}</p>
+    <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+    <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+
+    <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+      <span>Notifications</span>
+    </a>
+
+    <a href="{{ url_for('views.admin_courses') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/resources.png') }}" class="sidebar-icon">
+      <span>Course <br> Allocation</span>
+    </a>
+
+    <a href="{{ url_for('views.admin_hours') }}"
+      class="sidebar-item {% if active_page == 'admin_staff' %}active{% endif %}">
+      <img src="{{ url_for('static', filename='images/staff-management.png') }}" class="sidebar-icon">
+      <span>Staff <br> Management</span>
+    </a>
+
+    <!-- MyTimetable (works for Admin) -->
+    <a href="{{ url_for('views.my_timetable') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/my-timetable.png') }}" class="sidebar-icon">
+      <span>MyTimetable</span>
+    </a>
+
+    <a href="{{ url_for('views.reports') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+      <span>Reporting System</span>
+    </a>
+
+    <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+      <span>FAQ</span>
+    </a>
+  </nav>
+
+
+  <div class="course-table-wrapper">
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+    <div class="flashes">
+      {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <h1 class="tt-title">Weekly Working Hours per Staff Member</h1>
+
+    <div class="staff-search-wrapper">
+      <form action="{{ url_for('views.admin_hours') }}" method="GET" class="search-form">
+        <div class="search-table-container">
+          <input name="search" type="text" placeholder="Search by staff name"
+            value="{{ request.args.get('search', '') }}">
+
+          <button type="submit">Search</button>
+        </div>
+      </form>
+    </div>
+
+    <table class="courses-table">
+      <thead>
+        <tr>
+          <th>Staff ID</th>
+          <th>Name</th>
+          <th>Position</th>
+          <th>Target Hours</th>
+          <th>Allocated</th>
+          <th>Remaining</th>
+          <th>Set Target</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for s in staff %}
+        <tr>
+          <td>{{ s.StaffID }}</td>
+          <td>{{ s.Name }}</td>
+          <td>{{ s.Position }}</td>
+
+          <!-- Target Hours (from Staff.TotalHours) -->
+          <td>
+            {% if s.TargetHours is not none %}
+            {{ s.TargetHours }}
+            {% else %}
+            <span style="color:#7A8AA0;">Not set</span>
+            {% endif %}
+          </td>
+
+          <!-- Allocated Hours (from sum of Allocations.AssignedHour) -->
+          <td>{{ s.AllocatedHours }}</td>
+
+          <!-- Remaining Hours -->
+          <td>
+            {% if s.TargetHours is not none %}
+            {{ s.TargetHours - s.AllocatedHours }}
+            {% else %}
+            <span style="color:#7A8AA0;">N/A</span>
+            {% endif %}
+          </td>
+
+          <!-- Form to set/update target hours -->
+          <td>
+            <form method="POST" style="display:flex; gap:0.5rem; align-items:center;">
+              <input type="hidden" name="staff_id" value="{{ s.StaffID }}">
+              <input type="number" name="total_hours" min="0" step="1" placeholder="e.g. 37"
+                value="{{ s.TargetHours if s.TargetHours is not none else '' }}" class="pill-input">
+              <button type="submit" class="tt-add">Assign</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7">No staff found.</td>
+        </tr>
+        {% endfor %}
+
+        <script>document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+
+            document.querySelectorAll('.sidebar .sidebar-item[href]').forEach(link => {
+              try {
+                const linkPath = new URL(link.href).pathname;
+                if (linkPath === currentPath) {
+                  link.classList.add('active');
+                }
+              } catch (e) {
+                // ignore bad hrefs like "#"
+              }
+            });
+          });
+        </script>
+
+      </tbody>
+
+</html>
