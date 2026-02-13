@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>{{role}} – Notifications</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <style>
+        .notif-wrapper {
+            margin-left: 210px;
+            margin-top: 78px;
+            padding: 24px;
+            background: #EDF3F9;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .dashboard-header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #d0d7e8;
+            margin-bottom: 22px;
+        }
+
+        .dashboard-header h2 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+            color: #1C2A3A;
+        }
+
+        .dashboard-subtext {
+            color: #64748b;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        .stats-card {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .stat-box {
+            flex: 1;
+            background: #F7FAFC;
+            border: 1px solid #d0d7e8;
+            padding: 14px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-title {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1C2A3A;
+        }
+
+        .notif-card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #d0d7e8;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .notif-list {
+            margin-top: 16px;
+        }
+
+        .notif-item {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .notif-item.unread {
+            background: #dbeafe;
+        }
+
+        .notif-meta {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .notif-msg {
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+
+        .notif-actions form {
+            display: inline-block;
+            margin: 0;
+        }
+
+        .notif-actions button {
+            border: 1px solid #cbd5f5;
+            background: #ffffff;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .notif-actions button:hover {
+            background: #e5edff;
+        }
+
+        .send-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .send-form select,
+        .send-form textarea {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            padding: 8px 10px;
+            font-size: 14px;
+        }
+
+        .send-form button {
+            align-self: flex-start;
+            border-radius: 8px;
+            border: none;
+            background: #155BCB;
+            color: #fff;
+            padding: 8px 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="icon-container">
+            <img src="{{ url_for('static', filename='images/allocations.png') }}" alt="Allocations Icon"
+                class="allocations">
+        </div>
+        <p class="DashboardTitle">Staff Workload Dashboard</p>
+        <p class="database">Database-Driven Team Management System</p>
+        </div>
+        </div>
+    </nav>
+
+    <!-- Same sidebar layout as manager dashboard -->
+    <nav class="sidebar">
+        <p class="sidebarname">{{ name }}</p>
+        <p class="administratorx">{{ role }}</p>
+        <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+        <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+
+        <!-- Dashboard → Notifications -->
+        <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+            <span>Notifications</span>
+        </a>
+
+        <!-- Course Allocation → Manager Dashboard -->
+        <a href="{{ url_for('views.manager_dashboard') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/resources.png') }}" class="sidebar-icon">
+            <span>Staff <br> Allocation</span>
+        </a>
+
+
+        <a href="{{ url_for('views.system_admin_manage') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/staff-management.png') }}" class="sidebar-icon">
+            <span>Manage <br> Users</span>
+        </a>
+
+
+        <!-- MyTimetable → my_timetable -->
+        <a href="{{ url_for('views.my_timetable') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/my-timetable.png') }}" class="sidebar-icon">
+            <span>MyTimeTable</span>
+        </a>
+
+        <!-- Reporting System Static -->
+        <a href="{{ url_for('views.reports') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+            <span>Reporting System</span>
+        </a>
+
+        <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+            <span>FAQ</span>
+
+        </a>
+        <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+            <span>Manage Users</span>
+        </a>
+
+    </nav>
+
+
+
+
+    <!-- Dashboard Welcome -->
+    <div class="notif-wrapper">
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        <div class="flashes">
+            {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-header">
+            <h2>Welcome back, {{ name }} </h2>
+            <p class="dashboard-subtext">Here are your latest messages and updates.</p>
+            <div class="stats-card">
+                <div class="stat-box">
+                    <div class="stat-title">Total Messages</div>
+                    <div class="stat-value">{{ inbox|length }}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-title">Unread Messages</div>
+                    <div class="stat-value">{{ inbox|selectattr("IsRead", "equalto", 0)|list|length }}</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    </div>
+</body>
+
+</html>

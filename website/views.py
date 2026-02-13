@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-import os
+import os, re
 from sqlalchemy import create_engine, text
 from functools import wraps
 import datetime
@@ -8,8 +8,7 @@ views = Blueprint('views', __name__)
 
 # ---- DB connection ----
 engine = create_engine(
-    "mysql+pymysql://sql8806914:eL7S6etubu@sql8.freesqldatabase.com:3306/sql8806914",
-    pool_pre_ping=True
+    "mysql+pymysql://sql8816230:WKYhqaXPiu@sql8.freesqldatabase.com:3306/sql8816230"
 )
 
 def require_admin():
@@ -71,6 +70,86 @@ def logout():
     session.pop('role', None)
     flash("Logged out successfully.")
     return redirect(url_for('auth.login'))
+
+@views.route("/system_admin")
+def system_admin():
+    if session.get("role") != "Admin":
+        flash("Admin access required.", "error")
+        return redirect(url_for("auth.login")) 
+    return render_template(
+        "system_admin.html",
+        name=session.get("name"),
+        role=session.get("role")
+    )
+
+@views.route("/system_admin_manage")
+def system_admin_manage():
+    if session.get("role") != "Admin":
+        flash("Admin access required.", "error")
+        return redirect(url_for("auth.login"))
+    return render_template(
+        "system_admin_manage.html",
+        name=session.get("name"),
+        role=session.get("role")
+    )
+
+@views.route("/system_admin_management")
+def system_admin_management():
+    if session.get("role") != "Admin":
+        flash("Admin access required.", "error")
+        return redirect(url_for("auth.login"))
+
+    return render_template(
+        "system_admin_management.html",
+        name=session.get("name"),
+        role=session.get("role")
+    )
+
+@views.route("/system_admin/possible_allocations", methods=["GET"])
+def system_admin_possible_allocations():
+    if session.get("role") != "Admin":
+        flash("Admin access required.", "error")
+        return redirect(url_for("auth.login"))
+
+    q = (request.args.get("q") or "").strip()
+
+    with engine.connect() as conn:
+        slots = conn.execute(
+            text("""
+                SELECT 
+                    te.TimeTableID,
+                    c.CourseID,
+                    c.CourseName,
+                    te.DayOfWeek,
+                    te.TimeSlot,
+                    te.RoomNumber,
+                    COALESCE(GROUP_CONCAT(a.StaffName ORDER BY a.StaffName SEPARATOR ', '), 'No one') AS AssignedStaff
+                FROM timetable_entry te
+                JOIN Courses c ON c.CourseID = te.CourseID
+                LEFT JOIN Allocations a ON a.TimeTableID = te.TimeTableID
+                WHERE (:q = '' 
+                       OR c.CourseName LIKE :likeq
+                       OR te.DayOfWeek LIKE :likeq
+                       OR te.TimeSlot LIKE :likeq
+                       OR te.RoomNumber LIKE :likeq
+                       OR a.StaffName LIKE :likeq)
+                GROUP BY te.TimeTableID, c.CourseID, c.CourseName, te.DayOfWeek, te.TimeSlot, te.RoomNumber
+                ORDER BY c.CourseName,
+                         FIELD(te.DayOfWeek,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'),
+                         te.TimeSlot
+            """),
+            {"q": q, "likeq": f"%{q}%"}
+        ).mappings().all()
+
+    return render_template(
+        "system_admin_possible_allocations.html",
+        name=session.get("name"),
+        role=session.get("role"),
+        slots=slots,
+        q=q
+    )
+
+
 
 
 # ------------------- MANAGER DASHBOARD (single route) -------------------
@@ -350,6 +429,7 @@ def manager_allocations(course_id):
         assigned = conn.execute(
         text("""
             SELECT 
+                a.AllocationID,
                 a.StaffID,
                 a.StaffName,
                 MIN(a.AllocationID) AS AnyAllocationID
@@ -423,6 +503,10 @@ def manager_staff_list():
 
     search = request.args.get("search")
     with engine.connect() as conn:
+        staff = conn.execute(
+        text("SELECT StaffID, Name, Position FROM Staff ORDER BY Name")
+        ).mappings().all()
+
         if search:
             staff = conn.execute(
                 text("""
@@ -577,10 +661,13 @@ def admin_hours():
     if request.method == "POST":
         staff_id = request.form.get("staff_id", type=int)
         hours_raw = (request.form.get("total_hours") or "").strip()
+
         if not staff_id:
             flash("Invalid staff selection.", "error")
             return redirect(url_for("views.admin_hours"))
+
         if hours_raw == "":
+            # Allow clearing to NULL if you want
             new_hours = None
         else:
             try:
@@ -590,6 +677,7 @@ def admin_hours():
             except ValueError:
                 flash("Total hours must be a non-negative whole number.", "error")
                 return redirect(url_for("views.admin_hours"))
+
         with engine.begin() as conn:
             conn.execute(
                 text("""
@@ -599,51 +687,79 @@ def admin_hours():
                 """),
                 {"h": new_hours, "sid": staff_id}
             )
+
         flash("Working hours updated.", "success")
         return redirect(url_for("views.admin_hours"))
 
-    search = request.args.get("search")
+    # GET: load all staff + their total hours
+# GET: load all staff + their total / allocated hours
     with engine.connect() as conn:
-        if search:
-            staff = conn.execute(
-                text("""
-                    SELECT 
-                        s.StaffID,
-                        s.Name,
-                        s.Position,
-                        s.TotalHours AS TargetHours,
-                        COALESCE(SUM(a.AssignedHour), 0) AS AllocatedHours
-                    FROM Staff s
-                    LEFT JOIN Allocations a ON a.StaffID = s.StaffID
-                    WHERE s.Name LIKE :search
-                       OR CAST(s.StaffID AS CHAR) LIKE :search
-                       OR s.Position LIKE :search
-                    GROUP BY s.StaffID, s.Name, s.Position, s.TotalHours
-                    ORDER BY s.Name
-                """),
-                {"search": f"%{search}%"}
-            ).mappings().all()
-        else:
-            staff = conn.execute(
-                text("""
-                    SELECT 
-                        s.StaffID,
-                        s.Name,
-                        s.Position,
-                        s.TotalHours AS TargetHours,
-                        COALESCE(SUM(a.AssignedHour), 0) AS AllocatedHours
-                    FROM Staff s
-                    LEFT JOIN Allocations a ON a.StaffID = s.StaffID
-                    GROUP BY s.StaffID, s.Name, s.Position, s.TotalHours
-                    ORDER BY s.Name
-                """)
-            ).mappings().all()
+        staff = conn.execute(
+            text("""
+                SELECT 
+                    s.StaffID,
+                    s.Name,
+                    s.Position,
+                    s.TotalHours AS TargetHours,
+                    COALESCE(SUM(a.AssignedHour), 0) AS AllocatedHours,
+                    EXISTS (
+                        SELECT 1
+                        FROM Notifications n
+                        WHERE n.SenderID = s.StaffID
+                            and n.MessageText LIKE 'Hours Change Request:%'
+                    ) AS HasHoursFlag
+                FROM Staff s
+                LEFT JOIN Allocations a ON a.StaffID = s.StaffID
+                GROUP BY s.StaffID, s.Name, s.Position, s.TotalHours
+                ORDER BY s.Name
+           """)
+        ).mappings().all()
+        
+        allocations = conn.execute(
+            text("""
+                SELECT 
+                    a.AllocationID,
+                    a.StaffID,
+                    a.StaffName,
+                    a.CourseID,
+                    c.CourseName,
+                    a.AllocationDate,
+                    a.AssignedHour,
+                    te.DayOfWeek,
+                    te.TimeSlot
+                FROM Allocations a
+                LEFT JOIN Courses c ON a.CourseID = c.CourseID
+                LEFT JOIN timetable_entry te ON a.TimeTableID = te.TimeTableID
+                ORDER BY a.AllocationDate DESC
+           """)
+        ).mappings().all()
+
 
     return render_template(
         "admin_hours.html",
         staff=staff,
+        allocations=allocations,
         name=session.get("name"),
-        role=session.get("role")
+        role=session.get("role"),
+        active_page='admin_staff'
+    )
+
+@views.route('/admin/hours')
+def admin_staff_list():
+    if session.get('role') != 'Admin':
+        return redirect(url_for('auth.login'))
+
+    with engine.connect() as conn:
+        staff = conn.execute(
+            text("SELECT StaffID, Name, Position FROM Staff ORDER BY Name")
+        ).mappings().all()
+
+    return render_template(
+        'admin_staff_list.html',
+        staff=staff,
+        name=session.get('name'),
+        role=session.get('role'),
+        active_page='admin_staff'
     )
 
 
@@ -834,11 +950,18 @@ def notifications():
                 SELECT n.NotificationID,
                        n.MessageText,
                        n.IsRead,
-                       n.CreatedAt,
-                       s.Name AS SenderName
+                       n.CreatedAt,                       
+                        s.Name AS SenderName,
+                        cr.Status   AS RequestStatus,
+                        cr.RequestType AS RequestType,
+                        c.CourseName AS RequestCourseName
+
                 FROM Notifications n
                 JOIN Staff s ON n.SenderID = s.StaffID
                 JOIN Staff r ON n.ReceiverID = r.StaffID
+                LEFT JOIN CourseRequests cr ON n.RequestID = cr.RequestID
+                LEFT JOIN Courses c ON cr.CourseID = c.CourseID
+
                 WHERE r.Username = :uname
                 ORDER BY n.CreatedAt DESC
             """),
@@ -938,19 +1061,21 @@ def my_timetable():
             # --- UNASSIGN MODE ---
             if mode == 'unassign':
                 conn.execute(
-                    text("""
-                        UPDATE Allocations
-                        SET TimeTableID = NULL
-                        WHERE StaffID = :sid
-                          AND TimeTableID = :tid
-                          AND CourseID  = :cid
-                    """),
-                    {
-                        "sid": staff["StaffID"],
-                        "tid": timetable_id,
-                        "cid": course_id
-                    }
-                )
+    text("""
+        UPDATE Allocations
+        SET TimeTableID = NULL,
+            AssignedHour = NULL
+        WHERE StaffID = :sid
+          AND TimeTableID = :tid
+          AND CourseID  = :cid
+    """),
+    {
+        "sid": staff["StaffID"],
+        "tid": timetable_id,
+        "cid": course_id
+    }
+)
+
                 flash("You have been removed from that time slot.", "success")
                 return redirect(url_for('views.my_timetable'))
 
@@ -973,17 +1098,22 @@ def my_timetable():
 
             # Insert a new allocation row for this chosen slot
             conn.execute(
-                text("""
-                    INSERT INTO Allocations (StaffID, StaffName, CourseID, TimeTableID, AllocationDate)
-                    VALUES (:sid, :sname, :cid, :tid, CURDATE())
-                """),
-                {
-                    "sid": staff["StaffID"],
-                    "sname": staff["Name"],
-                    "cid": course_id,
-                    "tid": timetable_id,
-                }
-            )
+    text("""
+        INSERT INTO Allocations (StaffID, StaffName, CourseID, TimeTableID, AllocationDate, AssignedHour)
+        SELECT :sid, :sname, :cid, :tid, CURDATE(),
+               TIME_TO_SEC(
+                 TIMEDIFF(
+                   STR_TO_DATE(SUBSTRING_INDEX(te.TimeSlot,'-',-1), '%H:%i'),
+                   STR_TO_DATE(SUBSTRING_INDEX(te.TimeSlot,'-', 1), '%H:%i')
+                 )
+               ) / 3600
+        FROM timetable_entry te
+        WHERE te.TimeTableID = :tid
+        LIMIT 1
+    """),
+    {"sid": staff["StaffID"], "sname": staff["Name"], "cid": course_id, "tid": timetable_id}
+)
+
 
         flash("Time slot chosen successfully.", "success")
         return redirect(url_for('views.my_timetable'))
@@ -1127,8 +1257,9 @@ def reports():
         return redirect(url_for('auth.login'))
 
     # Only Staff & Manager can use reports
-    if session.get('role') not in ['Staff', 'Manager']:
-        flash("Only Staff and Managers can submit reports.", "error")
+    role = session.get('role')
+    if role not in ['Staff', 'Manager','Admin']:
+        flash("Only Staff, Managers and Admin can use reports.", "error")
         return redirect(url_for('views.notifications'))
 
     username = session.get('username')
@@ -1149,7 +1280,103 @@ def reports():
         report_type = (request.form.get('report_type') or '').strip()
         receiver_id = request.form.get('receiver_id', type=int)
         message = (request.form.get('message') or '').strip()
+        if report_type == "Course Request":
+            course_id = request.form.get('course_id')
+        
+            if not course_id:
+                flash("Please Select a course for your course requests.", "error")
+                return redirect(url_for('views.reports'))
+        
+            with engine.begin() as conn:
+                conn.execute(
+                    text("""
+                        INSERT INTO CourseRequests(StaffID, CourseID, Status, Notes, RequestType)
+                        VALUES (:sid, :cid, 'Pending', :notes, 'Add');
+                    """),
+                    {
+                        "sid": me["StaffID"],
+                        "cid": course_id,
+                        "notes": message,
 
+                    }
+                )
+            flash("Your course request has been submitted.", "success")
+            return redirect(url_for('views.reports'))
+        
+        if report_type == "Course Removal Request":
+            course_id = request.form.get('course_removal_id')
+        
+            if not course_id:
+                flash("Please Select a course to remove.", "error")
+                return redirect(url_for('views.reports'))
+        
+            with engine.begin() as conn:
+                conn.execute(
+                    text("""
+                        INSERT INTO CourseRequests(StaffID, CourseID, Status, Notes, RequestType)
+                        VALUES (:sid, :cid, 'Pending', :notes, 'Remove');
+                    """),
+                    {
+                        "sid": me["StaffID"],
+                        "cid": course_id,
+                        "notes": message,
+
+                    }
+                )
+            flash("Your course request has been submitted.", "success")
+            return redirect(url_for('views.reports'))
+        
+        if report_type == "Hours Change Request":
+            extra_raw = (request.form.get('extra_hours') or '').strip()
+        
+            if not receiver_id or not message or extra_raw == "":
+                flash("Please select an admin, enter extra hours, and add a message.", "error")
+                return redirect(url_for('views.reports'))
+            
+            try:
+                extra_hours = int(extra_raw)
+                if extra_hours <= 0:
+                    raise ValueError
+            except ValueError:
+                flash("This cannot be negative", "error")
+                return redirect(url_for('views.reports'))
+
+
+            with engine.begin() as conn:
+                receiver = conn.execute(
+                    text("SELECT StaffID, Position FROM Staff WHERE StaffID = :rid"),
+                    {"rid": receiver_id}
+                ).mappings().fetchone()
+
+                if not receiver:
+                    flash("Selected receipent doesnt exist", "error")
+                    return redirect(url_for('views.reports'))
+                
+                if receiver["Position"] != "Admin":
+                    flash("Hours Change Requests can only be sent to Admins.", "error")
+                    return redirect(url_for('views.reports'))
+                
+                full_msg = (
+                    f"Hours Change Request: {extra_hours} extra hours worked \n"
+                    f"Details: {message}"
+                )
+
+                conn.execute(
+                    text("""
+                        INSERT INTO Notifications (SenderID, ReceiverID, MessageText)
+                        VALUES (:sid, :rid, :msg)
+                    """),
+                    {
+                        "sid": me["StaffID"],
+                        "rid": receiver["StaffID"],
+                        "msg": full_msg
+                    }
+                )
+
+            flash("Your hours change request has been sent to Admin.", "success")
+            return redirect(url_for('views.reports'))
+
+        
         if not report_type or not receiver_id or not message:
             flash("All fields are required.", "error")
             return redirect(url_for('views.reports'))
@@ -1230,6 +1457,52 @@ def reports():
             {"me": me["StaffID"]}
         ).mappings().all()
 
+        # All courses for the Course request dropdown
+        courses = conn.execute(
+            text("""
+                SELECT CourseID, CourseName
+                FROM Courses
+                ORDER BY CourseName
+            """),
+        ).mappings().all()
+
+        pending_requests = []
+        if me["Position"] == "Manager":
+            pending_requests = conn.execute(
+                text("""
+                    SELECT cr.RequestID,
+                           cr.RequestedAt,
+                            cr.Notes,
+                            s.Name AS StaffName,
+                            c.CourseID,
+                            c.CourseName
+                    FROM CourseRequests cr
+                    JOIN Staff s ON cr.StaffID = s.StaffID
+                    JOIN Courses c ON cr.CourseID = c.CourseID
+                    WHERE cr.Status = 'Pending'
+                    ORDER BY cr.RequestedAt ASC
+                """)
+            ).mappings().all()
+
+        allocations = conn.execute(
+            text("""
+                 SELECT 
+                    a.AllocationID,
+                    a.StaffID,
+                    a.StaffName,
+                    a.CourseID,
+                    c.CourseName,
+                    a.AllocationDate,
+                    a.AssignedHour,
+                    te.DayOfWeek,
+                    te.TimeSlot
+                FROM Allocations a
+                LEFT JOIN Courses c ON a.CourseID = c.CourseID
+                LEFT JOIN timetable_entry te ON a.TimeTableID = te.TimeTableID
+                ORDER BY a.AllocationDate DESC""")
+        ).mappings().all()
+
+
 
     role = session.get('role')
     if role == "Admin":
@@ -1246,5 +1519,225 @@ def reports():
         me=me,
         admins=admins,
         admin_managers=admin_managers,
-        all_staff=all_staff
+        all_staff=all_staff,
+        courses=courses,
+        pending_requests=pending_requests,
+        allocations = allocations
     )
+
+@views.route('/course_requests/<int:request_id>/action', methods=['POST'])
+def course_request_action(request_id):
+    # Require Manager
+    if session.get('role') != 'Manager':
+        flash("Only managers can process course requests.", "error")
+        return redirect(url_for('views.reports'))
+
+    manager_id = session.get('staff_id')
+    if not manager_id:
+        flash("Manager ID missing from session. Please log in again.", "error")
+        return redirect(url_for('auth.login'))
+
+    action = request.form.get("action")  # "approve" or "reject"
+
+    with engine.begin() as conn:
+        # Get full request info
+        req = conn.execute(
+            text("""
+                SELECT cr.RequestID,
+                       cr.StaffID,
+                       cr.CourseID,
+                       cr.Status,
+                       cr.Notes,
+                        cr.RequestType,
+                       s.Name AS StaffName
+                FROM CourseRequests cr
+                JOIN Staff s ON cr.StaffID = s.StaffID
+                WHERE cr.RequestID = :rid
+            """),
+            {"rid": request_id}
+        ).mappings().fetchone()
+
+        if not req:
+            flash("Course request not found.", "error")
+            return redirect(url_for('views.reports'))
+
+        if req["Status"] != "Pending":
+            flash("This request has already been processed.", "warning")
+            return redirect(url_for('views.reports'))
+
+        # ---------------- REJECT ----------------
+        if action == "reject":
+            conn.execute(
+                text("""
+                    UPDATE CourseRequests
+                    SET Status = 'Rejected',
+                        ManagerID = :mid,
+                        DecisionAt = NOW()
+                    WHERE RequestID = :rid
+                """),
+                {"mid": manager_id, "rid": request_id}
+            )
+
+            # Notify staff member
+            conn.execute(
+                text("""
+                    INSERT INTO Notifications (SenderID, ReceiverID, MessageText, RequestID)
+                    VALUES (:mid, :sid, :msg, :rid)
+                """),
+                {
+                    "mid": manager_id,
+                    "sid": req["StaffID"],
+                    "msg": f"Your Course Request for {req['CourseID']} was REJECTED.",
+                    "rid": req["RequestID"]
+                }
+            )
+
+            flash("Request rejected.", "info")
+            return redirect(url_for('views.reports'))
+
+        # ---------------- APPROVE ----------------
+        if action == "approve":
+            # Approve the request
+            conn.execute(
+                text("""
+                    UPDATE CourseRequests
+                    SET Status = 'Approved',
+                        ManagerID = :mid,
+                        DecisionAt = NOW()
+                    WHERE RequestID = :rid
+                """),
+                {"mid": manager_id, "rid": request_id}
+            )
+
+
+            if req["RequestType"] == "Add":
+            # Allocate staff to the course
+                conn.execute(
+                    text("""
+                        INSERT INTO Allocations (StaffID, StaffName, CourseID, AllocationDate)
+                        VALUES (:sid, :sname, :cid, CURDATE())
+                     """),
+                    {
+                        "sid": req["StaffID"],
+                        "sname": req["StaffName"],
+                        "cid": req["CourseID"]
+                    }
+                )
+
+                notify_msg = f"Your request to be ADDED to {req['CourseID']} was APPROVED!"
+
+            elif req["RequestType"] == "Remove":
+            # Remove staff from the course (all allocations for that course)
+                conn.execute(
+                    text("""
+                        DELETE FROM Allocations
+                        WHERE StaffID = :sid
+                        AND CourseID = :cid
+                    """),
+                    {
+                        "sid": req["StaffID"],
+                        "cid": req["CourseID"]
+                    }
+                )
+
+                notify_msg = f"Your request to be REMOVED from {req['CourseID']} was APPROVED."
+
+            else:
+                # Fallback if some other type appears
+                notify_msg = f"Your course request for {req['CourseID']} was APPROVED."
+
+            # Notify staff member
+            conn.execute(
+                text("""
+                    INSERT INTO Notifications (SenderID, ReceiverID, MessageText, RequestID)
+                    VALUES (:mid, :sid, :msg, :rid)
+                """),
+                {
+                    "mid": manager_id,
+                    "sid": req["StaffID"],
+                    "msg": notify_msg,
+                    "rid": req["RequestID"]
+                }
+            )
+
+            flash("Request approved and staff allocated.", "success")
+            return redirect(url_for('views.reports'))
+
+    flash("Invalid action.", "error")
+    return redirect(url_for('views.reports'))
+
+@views.route('/hours_request/<int:notif_id>/approve', methods=['POST'])
+def approve_hours_request(notif_id):
+    # Only Admin can approve hours
+    if session.get('role') != 'Admin':
+        flash("Only admins can approve hours change requests.", "error")
+        return redirect(url_for('views.notifications'))
+
+    with engine.begin() as conn:
+        notif = conn.execute(
+            text("""
+                SELECT NotificationID, SenderID, ReceiverID, MessageText
+                FROM Notifications
+                WHERE NotificationID = :nid
+            """),
+            {"nid": notif_id}
+        ).mappings().fetchone()
+
+        if not notif:
+            flash("Hours request not found.", "error")
+            return redirect(url_for('views.notifications'))
+
+        # Make sure this is actually a Hours Change Request
+        # and was sent TO the admin
+        admin_id = session.get('staff_id')
+        if notif["ReceiverID"] != admin_id:
+            flash("You are not the recipient of this request.", "error")
+            return redirect(url_for('views.notifications'))
+
+        # Parse: "Hours Change Request: X extra hours worked."
+        m = re.search(r"Hours Change Request:\s*(\d+)\s+extra hours", notif["MessageText"])
+        if not m:
+            flash("Could not read extra hours from the request message.", "error")
+            return redirect(url_for('views.notifications'))
+
+        extra_hours = int(m.group(1))
+        staff_id = notif["SenderID"]
+
+        # Get staff name
+        staff_row = conn.execute(
+            text("SELECT StaffID, Name FROM Staff WHERE StaffID = :sid"),
+            {"sid": staff_id}
+        ).mappings().fetchone()
+
+        if not staff_row:
+            flash("Staff member not found.", "error")
+            return redirect(url_for('views.notifications'))
+
+        
+        conn.execute(
+            text("""
+                INSERT INTO Allocations
+                    (StaffID, StaffName, CourseID, AllocationDate, AssignedHour, TotalHours, TimeTableID)
+                VALUES
+                    (:sid, :sname, NULL, CURDATE(), :hours, NULL, NULL)
+            """),
+            {
+                "sid": staff_row["StaffID"],
+                "sname": staff_row["Name"],
+                "hours": extra_hours
+            }
+        )
+
+        # Mark notification as approved/read
+        conn.execute(
+            text("""
+                UPDATE Notifications
+                SET IsRead = 1,
+                    MessageText = CONCAT(MessageText, '\n\n[APPROVED by Admin]')
+                WHERE NotificationID = :nid
+            """),
+            {"nid": notif_id}
+        )
+
+    flash("Hours change request approved and extra hours added to allocated hours.", "success")
+    return redirect(url_for('views.admin_hours'))

@@ -3,11 +3,109 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>{{ role }} – Reports</title>
+  <title>Submit Request – {{ role }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/manager_reports.css') }}">
-</head>
+  <style>
+    .report-wrapper {
+      margin-left: 210px;
+      margin-top: 78px;
+      padding: 24px;
+      background: #EDF3F9;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
 
+    .report-card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #d0d7e8;
+      padding: 20px;
+      margin-bottom: 20px;
+      max-width: 720px;
+    }
+
+    .report-card h2 {
+      margin-top: 0;
+      color: #155BCB;
+    }
+
+    select,
+    textarea {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+
+    button {
+      border-radius: 8px;
+      border: none;
+      background: #155BCB;
+      color: #fff;
+      padding: 8px 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0d47a1;
+    }
+
+    .recipient-block {
+      display: none;
+    }
+
+    /* Pending requests table formatting */
+    .pending-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .pending-table th,
+    .pending-table td {
+      border: 1px solid #d0d7e8;
+      padding: 8px;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    .pending-table th {
+      background: #f5f7fb;
+    }
+
+    /* Buttons */
+    .btn-approve {
+      background: #27ae60;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-reject {
+      background: #e74c3c;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-approve:hover {
+      background: #1e8449;
+    }
+
+    .btn-reject:hover {
+      background: #c0392b;
+    }
+
+  </style>
+</head>
 
 <body>
 
@@ -95,6 +193,8 @@
           <option value="Course Change Request">Course Change Request</option>
           <option value="Hours Change Request">Hours Change Request</option>
           <option value="Message Staff">Message Staff</option>
+          <option value="Course Request">Course Request</option>
+          <option value="Course Removal Request">Request Course Removal</option>       
         </select>
 
         <!-- Course Change: Admin + Manager -->
@@ -111,24 +211,48 @@
         <!-- Hours Change: Admin only -->
         <div id="recipient_hours" class="recipient-block">
           <label><strong>Send To (Admin only)</strong></label>
-          <select name="receiver_id" disabled>
+          <select name="receiver_id">
             <option value="">-- Select Admin --</option>
             {% for u in admins %}
             <option value="{{ u.StaffID }}">{{ u.Name }} ({{ u.Position }})</option>
             {% endfor %}
           </select>
+          <label><strong>Extra hours worked</strong></label>
+          <input type="number" name="extra_hours" min="1" step="1" placeholder="e.g. 3">
         </div>
 
         <!-- Message Staff: all staff -->
         <div id="recipient_message" class="recipient-block">
           <label><strong>Send To (Any Staff)</strong></label>
-          <select name="receiver_id" disabled>
+          <select name="receiver_id">
             <option value="">-- Select Staff --</option>
             {% for u in all_staff %}
             <option value="{{ u.StaffID }}">{{ u.Name }} ({{ u.Position }})</option>
             {% endfor %}
           </select>
         </div>
+        
+        <!-- Course Request: select a course -->
+        <div id="recipient_course_request" class="recipient-block">
+          <label><strong>Select a Course</strong></label>
+          <select name="course_id" id="course_id">
+            <option value="">-- Select Course --</option>
+            {% for c in courses %}
+            <option value="{{ c.CourseID }}">{{ c.CourseName }} ({{ c.CourseID }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div id="recipient_course_removal" class="recipient-block">
+          <label><strong>Select a Course to Remove</strong></label>
+          <select name="course_removal_id" id="course_removal_id">
+            <option value="">-- Select Course --</option>
+            {% for c in courses %}
+            <option value="{{ c.CourseID }}">{{ c.CourseName }} ({{ c.CourseID }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
 
         <label><strong>Message</strong></label>
         <textarea name="message" rows="4" placeholder="Describe your request..." required></textarea>
@@ -138,6 +262,54 @@
     </div>
   </div>
 
+  
+
+  {% if pending_requests %}
+    <div class="report-card">
+      <h2>Pending Course Requests</h2>
+
+      <table class="pending-table">
+        <thead>
+          <tr>
+            <th>Staff</th>
+            <th>Course</th>
+            <th>Requested At</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in pending_requests %}
+          <tr>
+            <td>{{ r.StaffName }}</td>
+            <td>{{ r.CourseName }} ({{ r.CourseID }})</td>
+            <td>{{ r.RequestedAt }}</td>
+            <td>{{ r.Notes or "" }}</td>
+            <td>
+              <form method="POST"
+                    action="{{ url_for('views.course_request_action', request_id=r.RequestID) }}"
+                    style="display:inline;">
+                <button type="submit" name="action" value="approve" class="btn-approve">Approve</button>
+              </form>
+              <form method="POST"
+                    action="{{ url_for('views.course_request_action', request_id=r.RequestID) }}"
+                    style="display:inline;">
+                <button type="submit" name="action" value="reject" class="btn-reject">Reject</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="report-card">
+      <h2>Pending Course Requests</h2>
+      <p>No pending course requests.</p>
+    </div>
+    {% endif %}
+
+
   <script>
     function updateRecipientSelect() {
       const type = document.getElementById('report_type').value;
@@ -145,7 +317,9 @@
       const blocks = {
         "Course Change Request": document.getElementById('recipient_course'),
         "Hours Change Request": document.getElementById('recipient_hours'),
-        "Message Staff": document.getElementById('recipient_message')
+        "Message Staff": document.getElementById('recipient_message'),
+        "Course Request": document.getElementById('recipient_course_request'),
+        "Course Removal Request": document.getElementById('recipient_course_removal')
       };
 
       // Hide all blocks & disable selects

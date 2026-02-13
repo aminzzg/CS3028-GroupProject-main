@@ -3,11 +3,62 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>{{ role }} – Reports</title>
+  <title>Submit Request – {{ role }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/staff_reports.css') }}">
-</head>
+  <style>
+    .report-wrapper {
+      margin-left: 210px;
+      margin-top: 78px;
+      padding: 24px;
+      background: #EDF3F9;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
 
+    .report-card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #d0d7e8;
+      padding: 20px;
+      margin-bottom: 20px;
+      max-width: 720px;
+    }
+
+    .report-card h2 {
+      margin-top: 0;
+      color: #155BCB;
+    }
+
+    select,
+    textarea {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+
+    button {
+      border-radius: 8px;
+      border: none;
+      background: #155BCB;
+      color: #fff;
+      padding: 8px 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0d47a1;
+    }
+
+    .recipient-block {
+      display: none;
+    }
+  </style>
+</head>
 
 <body>
 
@@ -33,22 +84,6 @@
 
     </nav>
 
-    <!-- <p class="WorkloadSpreadsheet">Staff Workload Spreadsheet</p>
-  <p class="StaffWorkload">
-    Staff <br> Member
-    Role
-    Current Tasks
-    Hours This Week
-    Capacity
-    Workload%
-    Status
-    Next Available
-    Actions
-  </p>
-
-  <p class="SmallLabels-2">Generate Report</p>
-  <p class="SmallLabels-3">Export CSV</p>
-  </p> -->
     <nav class="sidebar">
       <p class="sidebarname">{{ name }}</p>
       <p class="administratorx">{{ role }}</p>
@@ -113,6 +148,9 @@
           <option value="Course Change Request">Course Change Request</option>
           <option value="Hours Change Request">Hours Change Request</option>
           <option value="Message Staff">Message Staff</option>
+          <option value="Course Request">Request a new Course</option>
+          <option value="Course Removal Request">Request Course Removal</option>
+
         </select>
 
         <!-- Course Change: Admin + Manager -->
@@ -129,12 +167,14 @@
         <!-- Hours Change: Admin only -->
         <div id="recipient_hours" class="recipient-block">
           <label><strong>Send To (Admin only)</strong></label>
-          <select name="receiver_id" disabled>
+          <select name="receiver_id">
             <option value="">-- Select Admin --</option>
             {% for u in admins %}
             <option value="{{ u.StaffID }}">{{ u.Name }} ({{ u.Position }})</option>
             {% endfor %}
           </select>
+          <label><strong>Extra hours worked</strong></label>
+          <input type="number" name="extra_hours" min="1" step="1" placeholder="e.g. 3">
         </div>
 
         <!-- Message Staff: all staff -->
@@ -156,6 +196,27 @@
     </div>
   </div>
 
+        <!-- Course Request: Select Course -->
+        <div id="recipient_course_request" class="recipient-block">
+          <label><strong>Select Course</strong></label>
+          <select name="course_id" id="course_id">
+            <option value="">-- Select Course --</option>
+            {% for c in courses %}
+            <option value="{{ c.CourseID }}">{{ c.CourseName }} ({{ c.CourseID }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div id="recipient_course_removal" class="recipient-block">
+          <label><strong>Select a Course to Remove</strong></label>
+          <select name="course_removal_id" id="course_removal_id">
+            <option value="">-- Select Course --</option>
+            {% for c in courses %}
+            <option value="{{ c.CourseID }}">{{ c.CourseName }} ({{ c.CourseID }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
   <script>
     function updateRecipientSelect() {
       const type = document.getElementById('report_type').value;
@@ -163,7 +224,10 @@
       const blocks = {
         "Course Change Request": document.getElementById('recipient_course'),
         "Hours Change Request": document.getElementById('recipient_hours'),
-        "Message Staff": document.getElementById('recipient_message')
+        "Message Staff": document.getElementById('recipient_message'),
+        "Course Request": document.getElementById('recipient_course_request'),
+        "Course Removal Request": document.getElementById('recipient_course_removal')
+
       };
 
       // Hide all blocks & disable selects

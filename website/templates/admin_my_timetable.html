@@ -5,7 +5,86 @@
   <meta charset="UTF-8" />
   <title>My Timetable – {{ staff.Name }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_my_timetable.css') }}">
+
+  <style>
+    .timetable-container {
+      margin-left: 210px;
+      margin-top: 78px;
+      padding: 28px 32px;
+      background: var(--pageBg);
+      min-height: 100vh;
+    }
+
+    /* Timetable Table */
+    table.timetable {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(90, 110, 130, 0.08);
+    }
+
+    .timetable th,
+    .timetable td {
+      border: 1px solid var(--stroke);
+      padding: 14px;
+      text-align: center;
+      vertical-align: top;
+      min-height: 70px;
+      font-size: 14px;
+    }
+
+    /* Header Styling */
+    .timetable th {
+      background: var(--headerBg);
+      color: var(--title);
+      font-weight: 700;
+    }
+
+    /* Slot Box Styling */
+    .slot {
+      background: var(--chip);
+      color: var(--chipText);
+      padding: 8px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      line-height: 1.4;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .title-bar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .back-icon-btn {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .tt-title {
+      text-align: center;
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .title-spacer {
+      width: 32px;
+      /* matches button width to keep grid symmetric */
+    }
+  </style>
 </head>
 
 <body>
@@ -114,68 +193,67 @@
   </table>
 
   <!-- ========================================= -->
-  <!--  Pending courses: let staff choose a slot -->
-  <!-- ========================================= -->
+<!--  Pending courses: let staff choose a slot -->
+<!-- ========================================= -->
 
-  <div style="margin-top: 32px;">
-    <h2 class="section-title">Choose Your Time Slots</h2>
+<div style="margin-top: 32px;">
+  <h2 class="section-title">Choose Your Time Slots</h2>
 
-    {% if pending_courses %}
+  {% if pending_courses %}
     {% for course in pending_courses %}
-    <div class="card" style="margin-top: 16px; padding: 16px 20px;">
-      <div class="card-header"
-        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <div>
-          <h3 style="margin:0; font-size:18px; font-weight:600;">
-            {{ course.CourseName }} ({{ course.CourseID }})
-          </h3>
-          <p style="margin:4px 0 0; font-size:13px; color:#6b7280;">
-            You are assigned to this course. Please choose one of the available time slots below.
-          </p>
+      <div class="card" style="margin-top: 16px; padding: 16px 20px;">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div>
+            <h3 style="margin:0; font-size:18px; font-weight:600;">
+              {{ course.CourseName }} ({{ course.CourseID }})
+            </h3>
+            <p style="margin:4px 0 0; font-size:13px; color:#6b7280;">
+              You are assigned to this course. Please choose one of the available time slots below.
+            </p>
+          </div>
+          <span class="badge">Waiting for selection</span>
         </div>
-        <span class="badge">Waiting for selection</span>
-      </div>
 
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th style="width:15%;">Day</th>
-            <th style="width:25%;">Time</th>
-            <th style="width:15%;">Room</th>
-            <th style="width:25%;">Allocated To</th>
-            <th style="width:20%;">Action</th>
-          </tr>
-        </thead>
+        <table class="data-table">
+  <thead>
+  <tr>
+    <th style="width:15%;">Day</th>
+    <th style="width:25%;">Time</th>
+    <th style="width:15%;">Room</th>
+    <th style="width:25%;">Allocated To</th>
+    <th style="width:20%;">Action</th>
+  </tr>
+</thead>
 
-        <tbody>
-          {% set slots = course_slots[course.CourseID] %}
-          {% if slots %}
-          {% for slot in slots %}
-          <tr>
-            <td>{{ slot.DayOfWeek }}</td>
-            <td>{{ slot.TimeSlot }}</td>
-            <td>{{ slot.RoomNumber }}</td>
+<tbody>
+  {% set slots = course_slots[course.CourseID] %}
+  {% if slots %}
+    {% for slot in slots %}
+      <tr>
+        <td>{{ slot.DayOfWeek }}</td>
+        <td>{{ slot.TimeSlot }}</td>
+        <td>{{ slot.RoomNumber }}</td>
 
-            <!-- NEW: who is currently allocated to this slot -->
-            <td>
-              {% if slot.AllocatedStaff %}
-              {{ slot.AllocatedStaff }}
-              {% else %}
-              <span style="color:#6b7280;">No one yet</span>
-              {% endif %}
-            </td>
+        <!-- NEW: who is currently allocated to this slot -->
+        <td>
+          {% if slot.AllocatedStaff %}
+            {{ slot.AllocatedStaff }}
+          {% else %}
+            <span style="color:#6b7280;">No one yet</span>
+          {% endif %}
+        </td>
 
-            <!-- Action: assign or de-assign for THIS logged-in staff -->
-            <td>
-              {% if slot.IsChosen %}
-              <span style="margin-right:8px; color:#16a34a; font-weight:600;">
-                Slot chosen
-              </span>
-              <form method="post" action="{{ url_for('views.my_timetable') }}" style="display:inline;">
-                <input type="hidden" name="course_id" value="{{ course.CourseID }}">
-                <input type="hidden" name="timetable_id" value="{{ slot.TimeTableID }}">
-                <input type="hidden" name="mode" value="unassign">
-                <button type="submit" style="
+        <!-- Action: assign or de-assign for THIS logged-in staff -->
+        <td>
+          {% if slot.IsChosen %}
+            <span style="margin-right:8px; color:#16a34a; font-weight:600;">
+              Slot chosen
+            </span>
+            <form method="post" action="{{ url_for('views.my_timetable') }}" style="display:inline;">
+              <input type="hidden" name="course_id" value="{{ course.CourseID }}">
+              <input type="hidden" name="timetable_id" value="{{ slot.TimeTableID }}">
+              <input type="hidden" name="mode" value="unassign">
+              <button type="submit" style="
                 border-radius:8px;
                 border:1px solid #e11d48;
                 background:#ffffff;
@@ -183,15 +261,15 @@
                 padding:6px 12px;
                 font-size:13px;
                 cursor:pointer;">
-                  De-assign
-                </button>
-              </form>
-              {% else %}
-              <form method="post" action="{{ url_for('views.my_timetable') }}" style="display:inline;">
-                <input type="hidden" name="course_id" value="{{ course.CourseID }}">
-                <input type="hidden" name="timetable_id" value="{{ slot.TimeTableID }}">
-                <input type="hidden" name="mode" value="assign">
-                <button type="submit" style="
+                De-assign
+              </button>
+            </form>
+          {% else %}
+            <form method="post" action="{{ url_for('views.my_timetable') }}" style="display:inline;">
+              <input type="hidden" name="course_id" value="{{ course.CourseID }}">
+              <input type="hidden" name="timetable_id" value="{{ slot.TimeTableID }}">
+              <input type="hidden" name="mode" value="assign">
+              <button type="submit" style="
                 border-radius:8px;
                 border:none;
                 background:#155BCB;
@@ -200,31 +278,31 @@
                 font-size:13px;
                 font-weight:600;
                 cursor:pointer;">
-                  Choose this slot
-                </button>
-              </form>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-          {% else %}
-          <tr>
-            <td colspan="5" style="color:#6b7280; text-align:center;">
-              No time slots have been defined for this course yet.
-            </td>
-          </tr>
+                Choose this slot
+              </button>
+            </form>
           {% endif %}
-        </tbody>
-
-      </table>
-    </div>
+        </td>
+      </tr>
     {% endfor %}
-    {% else %}
+  {% else %}
+    <tr>
+      <td colspan="5" style="color:#6b7280; text-align:center;">
+        No time slots have been defined for this course yet.
+      </td>
+    </tr>
+  {% endif %}
+</tbody>
+
+        </table>
+      </div>
+    {% endfor %}
+  {% else %}
     <p style="margin-top:12px; color:#6b7280;">
       You currently have no courses waiting for a time-slot choice.
     </p>
-    {% endif %}
-  </div>
+  {% endif %}
+</div>
 
 
 

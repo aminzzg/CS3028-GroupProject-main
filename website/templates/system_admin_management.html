@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>{{ role }} – Staff List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="icon-container">
+            <img src="{{ url_for('static', filename='images/allocations.png') }}" alt="Allocations Icon"
+                class="allocations">
+        </div>
+        <p class="DashboardTitle">Staff Allocation Dashboard</p>
+        <p class="database">Database-Driven Team Management System</p>
+
+    </nav>
+
+    <nav class="sidebar">
+        <p class="sidebarname">{{ name }}</p>
+        <p class="administratorx">{{ role }}</p>
+        <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+        <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+
+        <!-- Dashboard → Notifications -->
+        <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+            <span>Notifications</span>
+        </a>
+
+        <!-- Course Allocation → Manager Dashboard -->
+        <a href="{{ url_for('views.manager_dashboard') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/resources.png') }}" class="sidebar-icon">
+            <span>Staff <br> Allocation</span>
+        </a>
+
+
+        <a href="system_admin_manage" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/staff-management.png') }}" class="sidebar-icon">
+            <span>Manage <br> Users</span>
+        </a>
+
+        <!-- Reporting System Static -->
+        <a href="{{ url_for('views.reports') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+            <span>Reporting System</span>
+        </a>
+
+    </nav>
+
+    <!-- Main Content Wrapper -->
+    <div class="course-table-wrapper2">
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        <div class="flashes">
+            {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <h1 class="tt-title">All Staff Members</h1>
+
+        <div class="staff-search-wrapper">
+            <form action="{{ url_for('views.manager_staff_list') }}" method="GET" class="search-form">
+                <div class="search-table-container">
+                    <input name="search" type="text" placeholder="Search by staff name"
+                        value="{{ request.args.get('search', '') }}">
+
+                    <button type="submit">Search</button>
+                </div>
+
+            </form>
+        </div>
+
+        <table class="courses-table">
+            <thead>
+                <tr>
+                    <th>Staff ID</th>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Manage</th>
+                    <th>Manage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in staff %}
+                <tr>
+                    <td>{{ s.StaffID }}</td>
+                    <td>{{ s.Name }}</td>
+                    <td>{{ s.Position }}</td>
+                    <td>
+                        <a href="{{ url_for('views.manager_staff_allocations', staff_id=s.StaffID) }}"
+                            class="manage-btn">
+                            Lock Account
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('views.manager_staff_timetable', staff_id=s.StaffID) }}" class="manage-btn">
+                            Unlock Account
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="color:#7A8AA0;">No staff found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+
+            document.querySelectorAll('.sidebar .sidebar-item[href]').forEach(link => {
+                try {
+                    const linkPath = new URL(link.href).pathname;
+                    if (linkPath === currentPath) {
+                        link.classList.add('active');
+                    }
+                } catch (e) {
+                    // ignore bad hrefs like "#"
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

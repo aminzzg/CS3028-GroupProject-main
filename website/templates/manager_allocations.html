@@ -2,12 +2,130 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Staff Allocations – {{ role }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/manager_allocations.css') }}">
-</head>
+  <meta charset="utf-8" />
+  <title>Allocations for {{ course.CourseName }} ({{ course.CourseID }})</title>
 
+  <!-- Inter font (same as your CSS) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Your main stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+
+  <!-- Page-specific helpers -->
+  <style>
+    /* keep your page-specific styles */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #eef2f7;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table thead th {
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+      padding: 12px;
+      background: #eef2f7;
+    }
+
+    .table tbody td {
+      padding: 14px 12px;
+      border-top: 1px solid #e5e7eb;
+      vertical-align: middle;
+    }
+
+    .input {
+      width: 100%;
+      max-width: 260px;
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: var(--cta);
+      color: var(--ctaText);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid var(--stroke);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      filter: brightness(0.95);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    }
+
+    .btn:active {
+      filter: brightness(0.9);
+      transform: translateY(0);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .assign-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 13px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--chipText);
+    }
+
+    .title-bar {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .tt-title {
+      text-align: center;
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--title);
+    }
+  </style>
+</head>
 
 
 <body>
@@ -72,7 +190,7 @@
   <div class="course-table-wrapper2">
 
 
-    <div class="title-bar">
+     <div class="title-bar">
       <div></div>
       <h1 class="tt-title">Allocations for {{ course.CourseName }} ({{ course.CourseID }})</h1>
       <div></div>
@@ -81,91 +199,93 @@
 
 
     <div class="card">
-      <h3>Time slots for this course</h3>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Day</th>
-            <th>Time</th>
-            <th>Room</th>
-            <th>Assigned to</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% if unassigned %}
-          {% for r in unassigned %}
-          <tr>
-            <td>{{ r.DayOfWeek }}</td>
-            <td>{{ r.TimeSlot }}</td>
-            <td>{{ r.RoomNumber }}</td>
-            <td>{{ r.AssignedStaff }}</td>
-          </tr>
-          {% endfor %}
-          {% else %}
-          <tr>
-            <td colspan="3" style="color:#6b7280;">No timetable slots defined for this course.</td>
-          </tr>
-          {% endif %}
-        </tbody>
-      </table>
+<h3>Time slots for this course</h3>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Day</th>
+      <th>Time</th>
+      <th>Room</th>
+      <th>Assigned to</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% if unassigned %}
+      {% for r in unassigned %}
+      <tr>
+        <td>{{ r.DayOfWeek }}</td>
+        <td>{{ r.TimeSlot }}</td>
+        <td>{{ r.RoomNumber }}</td>
+         <td>{{ r.AssignedStaff }}</td>
+      </tr>
+      {% endfor %}
+    {% else %}
+      <tr>
+        <td colspan="3" style="color:#6b7280;">No timetable slots defined for this course.</td>
+      </tr>
+    {% endif %}
+  </tbody>
+</table>
 
     </div>
 
     <div class="card">
-      <!-- Simple assign-by-course form -->
-      <h3>Assign staff to this course</h3>
-      <form class="inline" method="post" action="{{ url_for('views.manager_allocations', course_id=course.CourseID) }}"
-        style="margin-bottom: 16px;">
-        <input class="input" name="staff_name" placeholder="Type staff name, e.g. Jane Doe" required>
-        <button class="btn primary" type="submit">Assign</button>
-      </form>
+<!-- Simple assign-by-course form -->
+<h3>Assign staff to this course</h3>
+<form class="inline" method="post"
+      action="{{ url_for('views.manager_allocations', course_id=course.CourseID) }}"
+      style="margin-bottom: 16px;">
+  <input class="input" name="staff_name" placeholder="Type staff name, e.g. Jane Doe" required>
+  <button class="btn primary" type="submit">Assign</button>
+</form>
 
-      <h3 style="margin-top: 24px;">Staff currently allocated to this course</h3>
-      <table class="table">
-        <thead>
-          <tr>
-            <th style="width:60%;">Staff member</th>
-            <th style="width:40%; text-align:right;">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for a in assigned %}
-          <tr>
-            <td>{{ a.StaffName }}</td>
-            <td>
-              <form method="post" action="{{ url_for('views.manager_delete_allocation',
+<h3 style="margin-top: 24px;">Staff currently allocated to this course</h3>
+<table class="table">
+  <thead>
+    <tr>
+      <th style="width:60%;">Staff member</th>
+      <th style="width:40%; text-align:right;">Actions</th>
+    </tr>
+  </thead>
+<tbody>
+  {% for a in assigned %}
+  <tr>
+    <td>{{ a.StaffName }}</td>
+    <td>
+      <form method="post"
+            action="{{ url_for('views.manager_delete_allocation',
                                allocation_id=a.AnyAllocationID) }}">
-                <input type="hidden" name="course_id" value="{{ course.CourseID }}">
-                <input type="hidden" name="staff_id" value="{{ a.StaffID }}">
-                <button type="submit" class="btn primary">De-assign</button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
+        <input type="hidden" name="course_id" value="{{ course.CourseID }}">
+        <input type="hidden" name="staff_id" value="{{ a.StaffID }}">
+        <button type="submit" class="btn primary">De-assign</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>
 
-      </table>
+</table>
 
     </div>
 
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const currentPath = window.location.pathname;
+  document.addEventListener('DOMContentLoaded', () => {
+    const currentPath = window.location.pathname;
 
-      document.querySelectorAll('.sidebar .sidebar-item[href]').forEach(link => {
-        try {
-          const linkPath = new URL(link.href).pathname;
-          if (linkPath === currentPath) {
-            link.classList.add('active');
-          }
-        } catch (e) {
-          // ignore bad hrefs like "#"
+    document.querySelectorAll('.sidebar .sidebar-item[href]').forEach(link => {
+      try {
+        const linkPath = new URL(link.href).pathname;
+        if (linkPath === currentPath) {
+          link.classList.add('active');
         }
-      });
+      } catch (e) {
+        // ignore bad hrefs like "#"
+      }
     });
-  </script>
+  });
+</script>
 
 </body>
 

@@ -1,3 +1,4 @@
+
 .title-h1 {
     font-size: 64px;
     font-family: Inter;
@@ -5,7 +6,7 @@
     font-weight: 400;
     text-align: center;
     margin-top: 200px;
-
+    
 }
 
 .login-p {
@@ -14,7 +15,6 @@
     font-family: Inter;
 
 }
-
 .rectangle1 {
     width: 501px;
     height: 74px;
@@ -32,7 +32,6 @@
     background-color: white;
     cursor: text;
 }
-
 .rectangle2 {
     width: 501px;
     height: 74px;
@@ -52,7 +51,6 @@
     cursor: text;
 
 }
-
 .rectangle3 {
     all: unset;
     width: 501px;
@@ -78,26 +76,20 @@ body {
 }
 
 img {
-    position: absolute;
-    top: 50px;
-    left: 30px;
+  position: absolute;
+  top: 50px;
+  left: 30px;
 }
-
 .login-container {
-    display: flex;
+    display: flex; 
     flex-direction: column;
     align-items: center;
     gap: 20px;
     text-align: center;
 }
-
-.rectangle1,
-.rectangle2,
-.rectangle3 {
-    width: 90%;
-    max-width: 500px;
+.rectangle1, .rectangle2, .rectangle3 {
+     width: 90%; max-width: 500px;
 }
-
 @media (max-width: 768px) {}
 
 .forgotpass {
@@ -112,12 +104,9 @@ img {
     color: #003C8EA6;
     cursor: pointer;
 }
-
-.rectangle1,
-.rectangle2 {
+.rectangle1, .rectangle2 {
     font-weight: 300;
 }
-
 .textbox {
     width: 100%;
     height: 100%;
@@ -135,3 +124,4 @@ form {
     align-items: center;
     gap: 20px;
 }
+

@@ -72,17 +72,6 @@
 
     <h1 class="tt-title">Weekly Working Hours per Staff Member</h1>
 
-    <div class="staff-search-wrapper">
-      <form action="{{ url_for('views.admin_hours') }}" method="GET" class="search-form">
-        <div class="search-table-container">
-          <input name="search" type="text" placeholder="Search by staff name"
-            value="{{ request.args.get('search', '') }}">
-
-          <button type="submit">Search</button>
-        </div>
-      </form>
-    </div>
-
     <table class="courses-table">
       <thead>
         <tr>
@@ -92,6 +81,7 @@
           <th>Target Hours</th>
           <th>Allocated</th>
           <th>Remaining</th>
+          <th>Hours Flag</th>
           <th>Set Target</th>
         </tr>
       </thead>
@@ -121,6 +111,14 @@
             {{ s.TargetHours - s.AllocatedHours }}
             {% else %}
             <span style="color:#7A8AA0;">N/A</span>
+            {% endif %}
+          </td>
+
+          <td>
+            {% if s.HasHoursFlag %}
+             <span> Reported extra hours</span>
+            {% else %}
+              <span style="color:#7A8AA0;">No issues</span>
             {% endif %}
           </td>
 

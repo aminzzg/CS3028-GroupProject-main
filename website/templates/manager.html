@@ -6,9 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ role }} Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/manager.css') }}">
-</head>
+  <style>
+    /* only show the active panel */
+    .panel {
+      display: none;
+    }
 
+    .panel.active {
+      display: block;
+    }
+  </style>
+</head>
 
 <body>
   <nav class="navbar">
@@ -52,10 +60,6 @@
     </a>
 
     <!-- FAQ Static -->
-    <a href="{{ url_for('views.faq') }}" class="sidebar-item">
-      <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
-      <span>FAQ</span>
-    </a>
 
     <!-- Reporting System Static -->
     <a href="{{ url_for('views.reports') }}" class="sidebar-item">
@@ -63,92 +67,99 @@
       <span>Reporting System</span>
     </a>
 
+    <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+      <span>FAQ</span>
+    </a>
+
   </nav>
 
   <div class="course-table-wrapper">
 
-    <section id="courses" class="panel">
+  <section id="courses" class="panel">
 
-      <div class="manager-search-wrapper">
-        <form action="{{ url_for('views.manager_dashboard') }}" method="GET" class="search-form">
-          <div class="search-table-container">
-            <input name="search" type="text" placeholder="Search by course name"
-              value="{{ request.args.get('search', '') }}">
+    <div class="manager-search-wrapper">
+      <form action="{{ url_for('views.manager_dashboard') }}"
+            method="GET"
+            class="search-form">
+        <div class="search-table-container">
+          <input name="search"
+                 type="text"
+                 placeholder="Search by course name"
+                 value="{{ request.args.get('search', '') }}">
 
-            <select name="sort">
-              <option value="">Sort</option>
-              <option value="CourseName" {{ 'selected' if request.args.get('sort')=='CourseName' else '' }}>Course Name
-              </option>
-              <option value="ClassSize" {{ 'selected' if request.args.get('sort')=='ClassSize' else '' }}>Class Size
-              </option>
-              <option value="AllocatedStaff" {{ 'selected' if request.args.get('sort')=='AllocatedStaff' else '' }}>
-                Allocated Staff</option>
-            </select>
+          <select name="sort">
+            <option value="">Sort</option>
+            <option value="CourseName" {{ 'selected' if request.args.get('sort')=='CourseName' else '' }}>Course Name</option>
+            <option value="ClassSize" {{ 'selected' if request.args.get('sort')=='ClassSize' else '' }}>Class Size</option>
+            <option value="AllocatedStaff" {{ 'selected' if request.args.get('sort')=='AllocatedStaff' else '' }}>Allocated Staff</option>
+          </select>
 
-            <button type="submit">Search</button>
-          </div>
-        </form>
-      </div>
+          <button type="submit">Search</button>
+        </div>
+      </form>
+    </div>
 
-      <table class="courses-table">
-        <thead>
-          <tr>
-            <th>Course Name</th>
-            <th>Course Info</th>
-            <th>Class Size</th>
-            <th>Allocated Staff</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for course in courses %}
-          <tr>
-            <td>{{ course.CourseName }}</td>
-            <td>{{ course.CourseInfo }}</td>
-            <td>{{ course.ClassSize }}</td>
-            <td>{{ course.AllocatedStaff }}</td>
-            <td>
-              <a class="manage-btn" href="{{ url_for('views.manager_allocations', course_id=course.CourseID) }}">
-                Assign
-              </a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <table class="courses-table">
+      <thead>
+        <tr>
+          <th>Course Name</th>
+          <th>Course Info</th>
+          <th>Class Size</th>
+          <th>Allocated Staff</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for course in courses %}
+        <tr>
+          <td>{{ course.CourseName }}</td>
+          <td>{{ course.CourseInfo }}</td>
+          <td>{{ course.ClassSize }}</td>
+          <td>{{ course.AllocatedStaff }}</td>
+          <td>
+            <a class="manage-btn"
+               href="{{ url_for('views.manager_allocations', course_id=course.CourseID) }}">
+              Assign
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
-    </section>
-  </div>
+  </section>
+</div>
 
-  <h2>Allocations</h2>
-  {% if allocations and allocations|length %}
-  <table class="allocations-table">
-    <thead>
-      <tr>
-        <th>AllocationID</th>
-        <th>StaffID</th>
-        <th>CourseID</th>
-        <th>AllocationDate</th>
-        <th>AssignedHour</th>
-        <th>TotalHours</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for a in allocations %}
-      <tr>
-        <td>{{ a.AllocationID }}</td>
-        <td>{{ a.StaffID }}</td>
-        <td>{{ a.CourseID }}</td>
-        <td>{{ a.AllocationDate }}</td>
-        <td>{{ a.AssignedHour }}</td>
-        <td>{{ a.TotalHours }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p style="color:gray">No allocations found.</p>
-  {% endif %}
+    <h2>Allocations</h2>
+    {% if allocations and allocations|length %}
+    <table class="allocations-table">
+      <thead>
+        <tr>
+          <th>AllocationID</th>
+          <th>StaffID</th>
+          <th>CourseID</th>
+          <th>AllocationDate</th>
+          <th>AssignedHour</th>
+          <th>TotalHours</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in allocations %}
+        <tr>
+          <td>{{ a.AllocationID }}</td>
+          <td>{{ a.StaffID }}</td>
+          <td>{{ a.CourseID }}</td>
+          <td>{{ a.AllocationDate }}</td>
+          <td>{{ a.AssignedHour }}</td>
+          <td>{{ a.TotalHours }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:gray">No allocations found.</p>
+    {% endif %}
   </section>
 
   <script>
@@ -182,19 +193,19 @@
   </script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const currentPath = window.location.pathname;
+  document.addEventListener('DOMContentLoaded', () => {
+    const currentPath = window.location.pathname;
 
-      document.querySelectorAll('.sidebar .sidebar-item[href]').forEach(link => {
-        try {
-          const linkPath = new URL(link.href).pathname;
-          if (linkPath === currentPath) {
-            link.classList.add('active');
-          }
-        } catch { }
-      });
+    document.querySelectorAll('.sidebar .sidebar-item[href]').forEach(link => {
+      try {
+        const linkPath = new URL(link.href).pathname;
+        if (linkPath === currentPath) {
+          link.classList.add('active');
+        }
+      } catch {}
     });
-  </script>
+  });
+</script>
 
 
 </body>

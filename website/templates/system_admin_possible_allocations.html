@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>{{ role }} – Possible Allocations</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+
+    <style>
+        .page-wrapper {
+            margin-left: 210px;
+            margin-top: 78px;
+            padding: 24px;
+            background: #EDF3F9;
+            box-sizing: border-box;
+        }
+
+        .header-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #d0d7e8;
+            margin-bottom: 16px;
+        }
+
+        .header-card h2 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+            color: #1C2A3A;
+        }
+
+        .subtext {
+            color: #64748b;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        .container1 {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #d0d7e8;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .search-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .search-row form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-row input {
+            width: 260px;
+            max-width: 100%;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-row input:focus {
+            border-color: #155BCB;
+        }
+
+        .search-row button {
+            border-radius: 8px;
+            border: none;
+            background: #155BCB;
+            color: #fff;
+            padding: 8px 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #E7EFF7;
+            color: #223145;
+            font-size: 12px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="icon-container">
+            <img src="{{ url_for('static', filename='images/allocations.png') }}" alt="Allocations Icon"
+                class="allocations">
+        </div>
+        <p class="DashboardTitle">Staff Workload Dashboard</p>
+        <p class="database">Database-Driven Team Management System</p>
+    </nav>
+
+    <!-- Sidebar (matches your other pages) -->
+    <nav class="sidebar">
+        <p class="sidebarname">{{ name }}</p>
+        <p class="administratorx">{{ role }}</p>
+        <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+        <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+
+        <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+            <span>Notifications</span>
+        </a>
+
+        <a href="{{ url_for('views.manager_dashboard') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/resources.png') }}" class="sidebar-icon">
+            <span>Staff <br> Allocation</span>
+        </a>
+
+        <a href="{{ url_for('views.system_admin_manage') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/staff-management.png') }}" class="sidebar-icon">
+            <span>Manage <br> Users</span>
+        </a>
+
+        <a href="{{ url_for('views.system_admin_possible_allocations') }}" class="sidebar-item active">
+            <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+            <span>Possible <br> Allocations</span>
+        </a>
+
+        <a href="{{ url_for('views.reports') }}" class="sidebar-item">
+            <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+            <span>Reporting System</span>
+        </a>
+    </nav>
+
+    <div class="page-wrapper">
+        <div class="header-card">
+            <h2>All Possible Allocations</h2>
+            <p class="subtext">
+                This report shows every timetable slot in the system (course/day/time/room) and who is currently
+                allocated.
+            </p>
+        </div>
+
+        <div class="container1">
+            <div class="search-row">
+                <form method="GET" action="{{ url_for('views.system_admin_possible_allocations') }}">
+                    <input type="text" name="q" placeholder="Search by course, day, time, room, staff..."
+                        value="{{ q }}">
+                    <button type="submit">Search</button>
+                </form>
+
+                <span class="pill">Total slots: {{ slots|length }}</span>
+            </div>
+
+            <table class="courses-table">
+                <thead>
+                    <tr>
+                        <th>Slot ID</th>
+                        <th>Course</th>
+                        <th>Day</th>
+                        <th>Time</th>
+                        <th>Room</th>
+                        <th>Allocated Staff</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in slots %}
+                    <tr>
+                        <td>{{ s.TimeTableID }}</td>
+                        <td>{{ s.CourseName }} ({{ s.CourseID }})</td>
+                        <td>{{ s.DayOfWeek }}</td>
+                        <td>{{ s.TimeSlot }}</td>
+                        <td>{{ s.RoomNumber }}</td>
+                        <td>{{ s.AssignedStaff }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="color:#7A8AA0;">No timetable slots found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>

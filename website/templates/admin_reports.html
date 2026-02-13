@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>{{ role }} – Staff Hours</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+
+<body>
+  <!-- Reuse your navbar -->
+  <nav class="navbar">
+    <div class="icon-container">
+      <img src="{{ url_for('static', filename='images/allocations.png') }}" alt="Allocations Icon" class="allocations">
+    </div>
+    <p class="DashboardTitle">Staff Workload Dashboard</p>
+    <p class="database">Database-Driven Team Management System</p>
+  </nav>
+
+  <!-- Sidebar (same style as other admin pages) -->
+  <nav class="sidebar">
+    <p class="sidebarname">{{ name }}</p>
+    <p class="administratorx">{{ role }}</p>
+    <img src="{{ url_for('static', filename='images/logout.png') }}" alt="Logout Icon" class="logoutx">
+    <a href="#" class="logout">Logout</a>
+
+    <a href="{{ url_for('views.notifications') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/courses.png') }}" class="sidebar-icon">
+      <span>Notifications</span>
+    </a>
+
+    <a href="{{ url_for('views.admin_courses') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/resources.png') }}" class="sidebar-icon">
+      <span>Course <br> Allocation</span>
+    </a>
+
+    <a href="{{ url_for('views.admin_staff_list') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/staff-management.png') }}" class="sidebar-icon">
+      <span>Staff <br> Management</span>
+    </a>
+
+    <!-- MyTimetable (works for Admin) -->
+    <a href="{{ url_for('views.my_timetable') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/my-timetable.png') }}" class="sidebar-icon">
+      <span>MyTimetable</span>
+    </a>
+
+    <a href="{{ url_for('views.faq') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/faq.png') }}" class="sidebar-icon">
+      <span>FAQ</span>
+    </a>
+
+
+    <a href="{{ url_for('views.reports') }}" class="sidebar-item">
+      <img src="{{ url_for('static', filename='images/analytics.png') }}" class="sidebar-icon">
+      <span>Reporting System</span>
+    </a>
+
+  </nav>
+
+  <h2 class="tt-title" style="margin-top:32px;">List of history Allocations</h2>
+
+      <table class="courses-table">
+      <thead>
+        <tr>
+          <th>Allocation ID</th>
+          <th>Staff</th>
+          <th>Course</th>
+          <th>Time Slot</th>
+          <th>Allocation Date</th>
+          <th>Assigned Hours</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if allocations %}
+          {% for a in allocations %}
+          <tr>
+            <td>{{ a.AllocationID }}</td>
+            <td>{{ a.StaffName }}</td>
+            <td>
+              {% if a.CourseName %}
+                {{ a.CourseName }} ({{ a.CourseID }})
+              {% else %}
+                <span style="color:#7A8AA0;">No course (extra hours)</span>
+              {% endif %}
+          </td>
+
+          <td>
+            {% if a.TimeSlot %}
+              {{ a.DayOfWeek }} ({{ a.TimeSlot }})
+            {% else %}
+              <span style="color:#7A8AA0;">N/A</span>
+            {% endif %}
+          </td>
+
+          <td>{{ a.AllocationDate }}</td>
+          <td>
+            {% if a.AssignedHour is not none %}
+              {{ a.AssignedHour }}
+            {% else %}
+              <span style="color:#7A8AA0;">Not set</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="6" style="color:#7A8AA0;">No allocations found.</td>
+        </tr>
+        {% endif %}
+      </tbody>
+      </table>
+  </div>
+</div>
+
+</body>
+
+</html>

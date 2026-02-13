@@ -4,8 +4,9 @@ from sqlalchemy import create_engine, text
 auth = Blueprint('auth', __name__)
 
 
-engine = create_engine("mysql+pymysql://sql8806914:eL7S6etubu@sql8.freesqldatabase.com:3306/sql8806914")
-
+engine = create_engine(
+    "mysql+pymysql://sql8816230:WKYhqaXPiu@sql8.freesqldatabase.com:3306/sql8816230"
+)
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
